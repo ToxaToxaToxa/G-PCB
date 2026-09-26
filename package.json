@@ -1,6 +1,6 @@
 {
   "name": "gSender",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "gsenderVersion": "1.6.4",
   "description": "G-PCB: gSender with a step-by-step PCB milling workflow for GRBL CNC machines",
   "author": {
@@ -20,7 +20,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/ToxaToxaToxa/gsender"
+    "url": "https://github.com/ToxaToxaToxa/G-PCB"
   },
   "license": "GPL-3.0-only",
   "engines": {

@@ -4,7 +4,6 @@ package-lock.json
 /.nyc_output
 /coverage
 /dist
-/docs
 /output
 /releases
 .idea

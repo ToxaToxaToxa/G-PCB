@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>G-PCB</title>
+<style>
+    html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+    body { display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .card {
+        position: relative;
+        width: 580px;
+        height: 380px;
+        border-radius: 18px;
+        overflow: hidden;
+        background: radial-gradient(circle at 30% 25%, #1f6b3d 0%, #11442a 55%, #0a2e1c 100%);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+    }
+    .traces { position: absolute; inset: 0; opacity: 0.35; }
+    .icon { position: relative; width: 150px; height: 150px; border-radius: 34px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); }
+    h1 { position: relative; margin: 18px 0 2px; font-size: 54px; font-weight: 700; letter-spacing: 1px; }
+    p { position: relative; margin: 0; font-size: 16px; color: #d7eadc; }
+    .bar { position: relative; margin-top: 22px; width: 200px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.18); overflow: hidden; }
+    .bar::after {
+        content: '';
+        position: absolute;
+        left: -40%;
+        width: 40%;
+        height: 100%;
+        border-radius: 2px;
+        background: #e0a040;
+        animation: run 1.2s ease-in-out infinite;
+    }
+    @keyframes run { to { left: 100%; } }
+</style>
+</head>
+<body>
+<div class="card">
+    <svg class="traces" viewBox="0 0 580 380" fill="none" stroke="#e0a040" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M0 60H120L150 90H250"/>
+        <path d="M0 320H90L130 280H200"/>
+        <path d="M580 50H470L440 80H380"/>
+        <path d="M580 300H490L450 340H360"/>
+        <path d="M40 0V30L70 60"/>
+        <path d="M540 380V350L510 320"/>
+        <g fill="#e0a040" stroke="none">
+            <circle cx="250" cy="90" r="6"/><circle cx="200" cy="280" r="6"/>
+            <circle cx="380" cy="80" r="6"/><circle cx="360" cy="340" r="6"/>
+        </g>
+    </svg>
+    <img class="icon" src="g-pcb-icon.png" alt="">
+    <h1>G-PCB</h1>
+    <p>PCB milling for GRBL CNC</p>
+    <div class="bar"></div>
+</div>
+</body>
+</html>

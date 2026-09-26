@@ -182,7 +182,7 @@ const main = () => {
                 backgroundColor: '#00000000',
             });
             splashScreen.loadFile(
-                path.join(__dirname, 'app/assets/Splashscreen.webp'),
+                path.join(__dirname, 'app/assets/splash.html'),
             );
             splashScreen.webContents.on('did-finish-load', () => {
                 splashScreen.show();
