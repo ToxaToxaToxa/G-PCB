@@ -1,3 +1,48 @@
+# <img src="electron-build/icon-square.png" width="48" align="top" alt=""> G-PCB
+
+**G-PCB is [gSender](https://github.com/Sienci-Labs/gsender) with a complete PCB milling workflow**: from Gerber files to finished boards on a GRBL CNC, step by step.
+
+It is an independent, community fork. It is not made, endorsed or supported by Sienci Labs; for gSender itself see [Sienci-Labs/gsender](https://github.com/Sienci-Labs/gsender).
+
+## What G-PCB adds
+
+A **PCB** section in the main menu, next to Carve, with a wizard you can move through in any order:
+
+1. **Project** – open a zip or the Gerber and drill files (Fusion 360 / EAGLE, KiCad, EasyEDA and others) and check the role of every layer. A frame drawn around the board is recognised.
+2. **Blank & array** – blank size, margins and gaps; as many copies of the board as fit, rotated when more fit that way.
+3. **Tools** – your V-bits (with the cut width at the chosen depth), end mills and drills.
+4. **Plan** – isolation, drilling, large holes and the board outline with tabs; order, bit and cutting data per stage. Every program covers all boards on the blank and can be loaded, saved or downloaded as a zip.
+5. **Work zero** – X0 Y0 on the blank corner and Z0 probed on the copper at a fixed reference point, with jog controls on the page.
+6. **Height map** – probes the copper over the isolation area; the isolation program follows the surface.
+7. **Run** – program by program: asks for a bit change, probes Z0 again at the same point, loads and starts. Programs started from the Carve screen are tracked too.
+8. **Done** – summary, or the same boards on a new blank.
+
+The single-page **PCB Milling** and **Height Map** tools are in *Tools*.
+
+Only single-sided boards for now.
+
+## Building on Windows
+
+Requires Node.js 24 and Yarn 1.
+
+```sh
+yarn install
+npm run package-sync
+yarn --cwd src install --production --ignore-scripts --non-interactive
+yarn run build-latest
+yarn run build:windows        # installer in output/
+```
+
+Telemetry is off unless you build with your own keys: copy `.env.example` to `.env` and fill in the Sentry DSN (crash reports) and the PostHog project (opt-in usage statistics).
+
+## License
+
+G-PCB is free software under the [GNU General Public License v3](LICENSE), like gSender. Changes from gSender: the `src/app/src/features/PcbWizard` and `PcbMilling` features, the height map tool, the PCB navigation section, branding (name, icons, application id), update source and telemetry configuration.
+
+---
+
+*The original gSender README follows.*
+
 # ![gSender logo](https://github.com/Sienci-Labs/sender/blob/master/src/app/images/icon-git.png?raw=true)gSender: connect to and control [grbl](https://github.com/grbl/grbl)-based CNCs
 
 gSender is a feature-packed CNC interface software designed to be clean and easy to learn while retaining a depth of capabilities for advanced users. Its development was begun in 2019 out of a passion for hobby CNC machines: **an interface reimagined to suit the needs of the at-home CNC user**.

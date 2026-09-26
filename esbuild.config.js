@@ -12,6 +12,8 @@ function loadEnv(target) {
         : '.env.dev';
 
     dotenv.config({ path: path.resolve(__dirname, envFile) });
+    // shared keys (telemetry) live in the root .env, also read by Vite
+    dotenv.config({ path: path.resolve(__dirname, '.env') });
 }
 
 const srcResolverPlugin = {
@@ -261,6 +263,7 @@ const createConfig = (target, entry, outdir, additionalOptions = {}) => {
             'global.PUBLIC_PATH': JSON.stringify(publicPath),
             'global.BUILD_VERSION': JSON.stringify(buildVersion),
             'global.METRICS_ENDPOINT': JSON.stringify(process.env.METRICS_ENDPOINT || ''),
+            'global.SENTRY_DSN': JSON.stringify(process.env.VITE_SENTRY_DSN || ''),
         },
         loader: {
             '.txt': 'copy',

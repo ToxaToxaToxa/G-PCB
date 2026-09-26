@@ -74,9 +74,11 @@ const externalRendererUrl = process.env.NODE_ENV === 'development'
     ? process.env.ELECTRON_RENDERER_URL
     : '';
 
-if (process.env.NODE_ENV === 'production') {
+// Crash reports go to the G-PCB Sentry project set at build time (VITE_SENTRY_DSN
+// in .env); without it nothing is sent.
+if (process.env.NODE_ENV === 'production' && global.SENTRY_DSN) {
     Sentry.init({
-        dsn: 'https://eeb4899f0415aa6bc9de477a7faeb720@o558751.ingest.us.sentry.io/4509479105986560',
+        dsn: global.SENTRY_DSN,
         release: pkg.version,
     });
 }
@@ -282,7 +284,7 @@ const main = () => {
             };
             const options = {
                 ...bounds,
-                title: `gSender ${pkg.version}`,
+                title: `G-PCB ${pkg.version}`,
                 kiosk,
             };
             const window = await windowManager.openWindow(url, options, splashScreen);
@@ -513,7 +515,7 @@ const main = () => {
                     minWidth: 550 / factor,
                     minHeight: 460 / factor,
                     useContentSize: true,
-                    title: 'gSender',
+                    title: 'G-PCB',
                     parent: window,
                 };
                 // Hash router URL should look like '{url}/#/widget/:id'

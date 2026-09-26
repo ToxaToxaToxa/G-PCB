@@ -45,6 +45,8 @@ export default defineConfig({
         },
         dedupe: ['react', 'react-dom'],
     },
+    // telemetry keys come from the repository root .env (see .env.example)
+    envDir: path.resolve(__dirname, '../..'),
     define: {},
     server: {
         hmr: {

@@ -40,3 +40,7 @@ packages/plugin-sdk/dist
 
 /.claude
 CLAUDE.md
+
+# build keys (telemetry, signing); only the example is committed
+.env.*
+!.env.example

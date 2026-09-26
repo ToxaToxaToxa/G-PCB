@@ -1,10 +1,10 @@
 {
   "name": "gSender",
   "version": "1.6.4",
-  "description": "Electron sender for GRBL based CNC machines",
+  "description": "G-PCB: gSender with a step-by-step PCB milling workflow for GRBL CNC machines",
   "author": {
-    "name": "Sienci Labs <hi@sienci.com>",
-    "email": "hi@sienci.com"
+    "name": "ToxaToxaToxa",
+    "email": "znam.org.ua@gmail.com"
   },
   "main": "./dist/gsender/server-cli",
   "types": "./dist/gsender/server-cli",
@@ -19,9 +19,9 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Sienci-Labs/gsender"
+    "url": "https://github.com/ToxaToxaToxa/gsender"
   },
-  "license": "MIT",
+  "license": "GPL-3.0-only",
   "engines": {
     "node": ">=18"
   },
@@ -96,19 +96,20 @@
     "test:app": "yarn --cwd src/app test"
   },
   "build": {
-    "appId": "org.sienci.gsender",
+    "appId": "io.github.toxatoxatoxa.gpcb",
     "extraMetadata": {
-      "main": "./main.js"
+      "main": "./main.js",
+      "productName": "G-PCB"
     },
     "afterSign": "./notarize.js",
     "extends": null,
-    "artifactName": "${name}-${version}-${arch}.${ext}",
+    "artifactName": "G-PCB-${version}-${arch}.${ext}",
     "asar": true,
     "asarUnpack": [
       "**/*.node",
       "**/*.{dll,so,dylib,exe}"
     ],
-    "productName": "gSender",
+    "productName": "G-PCB",
     "generateUpdatesFilesForAllChannels": true,
     "npmRebuild": false,
     "compression": "normal",
