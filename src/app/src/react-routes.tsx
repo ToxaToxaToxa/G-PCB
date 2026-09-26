@@ -8,6 +8,7 @@ import Squaring from './features/Squaring';
 import { StatParent } from './features/Stats/StatParent';
 import Surfacing from './features/Surfacing';
 import HeightMapTool from './features/HeightMap';
+import PcbMilling from './features/PcbMilling';
 import ToolCard from './components/ToolCard';
 import { GiFlatPlatform } from 'react-icons/gi';
 import { FaGamepad, FaKeyboard } from 'react-icons/fa';
@@ -42,7 +43,7 @@ import ConfirmationDialog from './components/ConfirmationDialog/ConfirmationDial
 import { BiSolidCylinder } from 'react-icons/bi';
 import SDCard from 'app/features/SDCard';
 import { FaSdCard } from 'react-icons/fa';
-import { LuDrill } from 'react-icons/lu';
+import { LuCircuitBoard, LuDrill } from 'react-icons/lu';
 import { AccessoryInstaller } from 'app/features/AccessoryInstaller';
 
 export const ReactRoutes = () => {
@@ -94,6 +95,13 @@ export const ReactRoutes = () => {
                                         description="Probe a Z height map and apply it to G-code for PCB milling on uneven stock"
                                         icon={MdGridOn}
                                         link="/tools/height-map"
+                                    />
+
+                                    <ToolCard
+                                        title="PCB Milling"
+                                        description="Turn Gerber and drill files into isolation, drilling and outline G-code"
+                                        icon={LuCircuitBoard}
+                                        link="/tools/pcb-milling"
                                     />
 
                                     <ToolCard
@@ -202,6 +210,18 @@ export const ReactRoutes = () => {
                                 withFixedArea
                             >
                                 <HeightMapTool />
+                            </Page>
+                        }
+                    />
+                    <Route
+                        path="pcb-milling"
+                        element={
+                            <Page
+                                title="PCB Milling"
+                                withGoBackButton
+                                withFixedArea
+                            >
+                                <PcbMilling />
                             </Page>
                         }
                     />

@@ -244,6 +244,7 @@
     "bcrypt-nodejs": "0.0.3",
     "buffer-chunks": "^0.1.1",
     "chalk": "~2.4.2",
+    "clipper-lib": "^6.4.2",
     "commander": "^10.0.0",
     "compression": "^1.8.1",
     "connect-restreamer": "~1.0.3",
