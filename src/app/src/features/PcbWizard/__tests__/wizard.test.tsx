@@ -51,14 +51,14 @@ it('walks from Gerber files to a 2 x 2 array of loadable programs', async () => 
     expect(screen.getByText('profile.gbr')).toBeTruthy();
 
     fireEvent.click(screen.getByText('Next'));
-    expect(screen.getByText('2. Blank & array')).toBeTruthy();
+    expect(screen.getByRole('heading').textContent).toMatch(/2\. Blank & array/);
     expect(screen.getByText(/\(2 × 2\), rotated 90°/)).toBeTruthy();
 
     fireEvent.click(screen.getByText('Next'));
-    expect(screen.getByText('V-bits (isolation)')).toBeTruthy();
+    expect(screen.getByText('V-bits — isolation')).toBeTruthy();
 
     fireEvent.click(screen.getByText('Next'));
-    await waitFor(() => expect(screen.getByText(/Programs · ~\d+ min in total/)).toBeTruthy(), { timeout: 30000 });
+    await waitFor(() => expect(screen.getByText(/\d+ programs? · ~\d+ min/)).toBeTruthy(), { timeout: 30000 });
     expect(screen.getByText('Isolation (top)')).toBeTruthy();
     expect(screen.getAllByText('Board outline', { selector: 'span.font-medium' })).toHaveLength(1);
 
@@ -68,6 +68,6 @@ it('walks from Gerber files to a 2 x 2 array of loadable programs', async () => 
 
     // any finished step can be reopened from the list
     fireEvent.click(screen.getByText('Blank & array'));
-    expect(screen.getByText('2. Blank & array')).toBeTruthy();
+    expect(screen.getByRole('heading').textContent).toMatch(/2\. Blank & array/);
     expect(storeData.pcbWizard).toBeTruthy();
 }, 60000);

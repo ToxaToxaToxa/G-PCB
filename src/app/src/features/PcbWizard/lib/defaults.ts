@@ -66,4 +66,15 @@ export const DEFAULT_WIZARD_SETTINGS: WizardSettings = {
     safeZ: 5,
     dwell: 2,
     applyHeightMap: true,
+    probe: {
+        travel: 25,
+        feed: 100,
+        slowFeed: 20,
+        retract: 1,
+        raise: 5,
+        plateThickness: 0,
+        clearance: 2,
+        mapDepth: 1.5,
+        spacing: 10,
+    },
 };

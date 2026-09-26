@@ -13,7 +13,7 @@ import PcbWizard from './features/PcbWizard';
 import ToolCard from './components/ToolCard';
 import { GiFlatPlatform } from 'react-icons/gi';
 import { FaGamepad, FaKeyboard } from 'react-icons/fa';
-import { TbListNumbers, TbRulerMeasure } from 'react-icons/tb';
+import { TbRulerMeasure } from 'react-icons/tb';
 import { MdGridOn, MdSquareFoot } from 'react-icons/md';
 import { Alarms } from './features/Stats/Alarms';
 import { Stats } from './features/Stats';
@@ -89,6 +89,20 @@ export const ReactRoutes = () => {
                                         description="Turn square material into round stock for rotary cutting"
                                         icon={BiSolidCylinder}
                                         link="/tools/rotary-surfacing"
+                                    />
+
+                                    <ToolCard
+                                        title="Height Map"
+                                        description="Probe a Z height map and apply it to G-code for PCB milling on uneven stock"
+                                        icon={MdGridOn}
+                                        link="/tools/height-map"
+                                    />
+
+                                    <ToolCard
+                                        title="PCB Milling"
+                                        description="Turn Gerber and drill files into isolation, drilling and outline G-code"
+                                        icon={LuCircuitBoard}
+                                        link="/tools/pcb-milling"
                                     />
 
                                     <ToolCard
@@ -189,6 +203,30 @@ export const ReactRoutes = () => {
                         }
                     />
                     <Route
+                        path="height-map"
+                        element={
+                            <Page
+                                title="Height Map"
+                                withGoBackButton
+                                withFixedArea
+                            >
+                                <HeightMapTool />
+                            </Page>
+                        }
+                    />
+                    <Route
+                        path="pcb-milling"
+                        element={
+                            <Page
+                                title="PCB Milling"
+                                withGoBackButton
+                                withFixedArea
+                            >
+                                <PcbMilling />
+                            </Page>
+                        }
+                    />
+                    <Route
                         path="rotary-surfacing"
                         element={
                             <Page
@@ -241,82 +279,12 @@ export const ReactRoutes = () => {
                 <Route
                     path="pcb"
                     element={
-                        <>
-                            <Outlet />
-                        </>
+                        // a top-level section like Carve: no page title, the wizard has its own header
+                        <div className="fixed-content-area px-6 pt-3 pb-2">
+                            <PcbWizard />
+                        </div>
                     }
-                >
-                    <Route
-                        index
-                        element={
-                            <div className="py-4 px-16 max-xl:px-8 fixed-content-area no-scrollbar">
-                                <p className="text-lg font-semibold mb-4 dark:text-white">
-                                    Printed circuit boards: from Gerber files to finished boards
-                                </p>
-
-                                {/* few cards: keep them card-sized instead of stretching to the page height */}
-                                <div className="grid lg:grid-cols-3 grid-cols-2 gap-4 content-start auto-rows-[16rem] fixed-select-tool-area overflow-y-auto overflow-x-hidden">
-                                    <ToolCard
-                                        title="PCB Wizard"
-                                        description="Step by step from Gerber files to finished boards, with an array of boards on one blank"
-                                        icon={TbListNumbers}
-                                        link="/pcb/wizard"
-                                    />
-
-                                    <ToolCard
-                                        title="PCB Milling"
-                                        description="Turn Gerber and drill files into isolation, drilling and outline G-code"
-                                        icon={LuCircuitBoard}
-                                        link="/pcb/milling"
-                                    />
-
-                                    <ToolCard
-                                        title="Height Map"
-                                        description="Probe a Z height map and apply it to G-code for PCB milling on uneven stock"
-                                        icon={MdGridOn}
-                                        link="/pcb/height-map"
-                                    />
-                                </div>
-                            </div>
-                        }
-                    />
-                    <Route
-                        path="wizard"
-                        element={
-                            <Page
-                                title="PCB Wizard"
-                                withGoBackButton
-                                withFixedArea
-                            >
-                                <PcbWizard />
-                            </Page>
-                        }
-                    />
-                    <Route
-                        path="milling"
-                        element={
-                            <Page
-                                title="PCB Milling"
-                                withGoBackButton
-                                withFixedArea
-                            >
-                                <PcbMilling />
-                            </Page>
-                        }
-                    />
-                    <Route
-                        path="height-map"
-                        element={
-                            <Page
-                                title="Height Map"
-                                withGoBackButton
-                                withFixedArea
-                            >
-                                <HeightMapTool />
-                            </Page>
-                        }
-                    />
-                </Route>
+                />
                 <Route path="stats" element={<StatParent />}>
                     <Route index element={<Stats />} />
                     <Route path="alarms" element={<Alarms />} />

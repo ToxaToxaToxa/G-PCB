@@ -67,6 +67,26 @@ export interface OutlineStage extends MillStage {
     tabHeight: number;
 }
 
+export interface ProbeSettings {
+    /** Longest downward probe move when setting Z0 */
+    travel: number;
+    feed: number;
+    /** Second, slow touch; 0 = single touch */
+    slowFeed: number;
+    /** Back-off between the fast and the slow touch */
+    retract: number;
+    /** Raise before moving to the reference point (relative, upwards) */
+    raise: number;
+    /** Touch plate thickness; 0 when the clip goes straight on the copper */
+    plateThickness: number;
+    /** Height above the copper after probing and between map points */
+    clearance: number;
+    /** How deep a height map point may probe below Z0 */
+    mapDepth: number;
+    /** Distance between height map points */
+    spacing: number;
+}
+
 export interface WizardSettings {
     side: BoardSide;
     stock: StockSettings;
@@ -84,6 +104,7 @@ export interface WizardSettings {
     safeZ: number;
     dwell: number;
     applyHeightMap: boolean;
+    probe: ProbeSettings;
 }
 
 export type LayerOverrides = Record<string, LayerKind>;

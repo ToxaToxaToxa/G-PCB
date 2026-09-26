@@ -1,10 +1,10 @@
 import { FaTasks } from 'react-icons/fa';
 import { RiToolsFill } from 'react-icons/ri';
 import { IoSpeedometerOutline } from 'react-icons/io5';
-import { LuCircuitBoard } from 'react-icons/lu';
 import cx from 'classnames';
 
 import Carve from './assets/Carve.svg';
+import Pcb from './assets/PCB.svg';
 import { NavbarLink } from './components/NavbarLink.tsx';
 import { useLocation, useNavigate } from 'react-router';
 import { useSettings } from '../Config/utils/SettingsContext.tsx';
@@ -66,7 +66,7 @@ export const NavBar = () => {
                 />
                 <NavbarLink
                     href="pcb"
-                    icon={LuCircuitBoard}
+                    svg={Pcb}
                     label="PCB"
                     onClick={(e) => checkIfNeedsBlock(e, 'pcb')}
                 />

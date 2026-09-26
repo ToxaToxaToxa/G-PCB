@@ -1,0 +1,36 @@
+<svg width="73" height="101" viewBox="0 0 73 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<filter id="pcb_shadow" x="0" y="44" width="73" height="54" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feDropShadow dx="0" dy="3" stdDeviation="2" flood-opacity="0.25"/>
+</filter>
+</defs>
+<g filter="url(#pcb_shadow)">
+<path d="M8 64L38 50L65 65L35 80L8 64Z" fill="#2F8F4E"/>
+<path d="M8 64L35 80V87L8 71V64Z" fill="#1F6B38"/>
+<path d="M35 80L65 65V72L35 87V80Z" fill="#185A2F"/>
+<path d="M8 64L38 50L65 65L35 80L8 64ZM8 64V71L35 87L65 72V65M35 80V87" stroke="black" stroke-linejoin="round"/>
+</g>
+<g stroke="#E0A040" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M17.75 66.6L23.75 63.8L33.65 64.9"/>
+<path d="M41 62.9L47 60.1L55.1 64.9"/>
+<path d="M32.9 72.4L40.4 68.9L39.2 66.6"/>
+<path d="M36.05 55.2L35.45 61.2"/>
+</g>
+<path d="M30.95 63.3L36.95 60.5L43.7 64.5L37.7 67.3L30.95 63.3Z" fill="#222222" stroke="black" stroke-linejoin="round"/>
+<g fill="#F0B75A" stroke="#8A5A12" stroke-width="0.6">
+<ellipse cx="17.75" cy="66.6" rx="2.2" ry="1.4"/>
+<ellipse cx="55.1" cy="64.9" rx="2.2" ry="1.4"/>
+<ellipse cx="32.9" cy="72.4" rx="2.2" ry="1.4"/>
+<ellipse cx="36.05" cy="55.2" rx="2.2" ry="1.4"/>
+</g>
+<g fill="black">
+<ellipse cx="17.75" cy="66.6" rx="0.7" ry="0.45"/>
+<ellipse cx="55.1" cy="64.9" rx="0.7" ry="0.45"/>
+<ellipse cx="32.9" cy="72.4" rx="0.7" ry="0.45"/>
+<ellipse cx="36.05" cy="55.2" rx="0.7" ry="0.45"/>
+</g>
+<rect x="28" y="1" width="11" height="34" rx="1.5" fill="#C4C4C4" stroke="black"/>
+<path d="M31 4V32" stroke="white" stroke-opacity="0.7" stroke-linecap="round"/>
+<path d="M28 35H39L33.5 52L28 35Z" fill="#A6A6A6" stroke="black" stroke-linejoin="round"/>
+<path d="M33.5 35L33.5 51" stroke="#6B6B6B" stroke-width="0.8"/>
+</svg>

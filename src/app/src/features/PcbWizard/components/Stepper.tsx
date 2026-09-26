@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import cx from 'classnames';
 import { LuCheck } from 'react-icons/lu';
 
@@ -15,40 +16,64 @@ interface Props {
     onSelect: (index: number) => void;
 }
 
+// one background class per state: with `important: true` two competing
+// bg-* classes resolve by stylesheet order, not by the order written here
+const circleStyle = (status: StepStatus, active: boolean) => {
+    if (status === 'done') return 'bg-green-500 border-green-500 text-white';
+    if (status === 'attention') return 'bg-orange-100 border-orange-400 text-orange-600';
+    if (active) return 'bg-white dark:bg-dark border-blue-500 text-blue-600';
+    return 'bg-white dark:bg-dark border-gray-300 text-gray-500';
+};
+
+/** Step bar: numbered circles with titles, joined by lines between them. */
 const Stepper = ({ steps, current, onSelect }: Props) => (
-    <ol className="flex flex-col gap-1">
+    <ol className="flex items-center w-full min-w-0 gap-1">
         {steps.map((step, index) => {
             const locked = step.status === 'locked';
             const active = index === current;
             return (
-                <li key={step.title}>
-                    <button
-                        type="button"
-                        disabled={locked}
-                        onClick={() => onSelect(index)}
-                        className={cx(
-                            'w-full grid grid-cols-[1.75rem_1fr] gap-2 items-center text-left rounded-md p-2',
-                            active ? 'bg-blue-50 dark:bg-dark-lighter' : 'hover:bg-gray-50 dark:hover:bg-dark-lighter',
-                            { 'opacity-50 cursor-not-allowed hover:bg-transparent': locked },
-                        )}
-                    >
-                        <span
+                <Fragment key={step.title}>
+                    {index > 0 && (
+                        <li
+                            aria-hidden
                             className={cx(
-                                'w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold border',
-                                step.status === 'done' && 'bg-green-500 border-green-500 text-white',
-                                step.status === 'attention' && 'bg-orange-100 border-orange-400 text-orange-600',
-                                (step.status === 'todo' || locked) && 'border-gray-300 text-gray-500',
-                                active && step.status !== 'done' && 'border-blue-500 text-blue-600',
+                                'h-0.5 flex-1 min-w-2 rounded',
+                                steps[index - 1].status === 'done' ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600',
+                            )}
+                        />
+                    )}
+                    <li className="shrink-0">
+                        <button
+                            type="button"
+                            disabled={locked}
+                            onClick={() => onSelect(index)}
+                            title={step.hint}
+                            aria-current={active ? 'step' : undefined}
+                            className={cx(
+                                'flex items-center gap-1.5 rounded-full py-1 pl-1 pr-2.5',
+                                active ? 'ring-1 ring-blue-400 bg-gray-50 dark:bg-dark-lighter' : !locked && 'hover:bg-gray-100 dark:hover:bg-dark-lighter',
+                                locked && 'opacity-50 cursor-not-allowed',
                             )}
                         >
-                            {step.status === 'done' ? <LuCheck /> : index + 1}
-                        </span>
-                        <span className="flex flex-col min-w-0">
-                            <span className={cx('text-sm', active ? 'font-semibold' : 'font-medium')}>{step.title}</span>
-                            <span className="text-xs text-gray-500 truncate">{step.hint}</span>
-                        </span>
-                    </button>
-                </li>
+                            <span
+                                className={cx(
+                                    'w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-semibold shrink-0',
+                                    circleStyle(step.status, active),
+                                )}
+                            >
+                                {step.status === 'done' ? <LuCheck className="w-3.5 h-3.5" /> : index + 1}
+                            </span>
+                            <span
+                                className={cx(
+                                    'text-sm whitespace-nowrap',
+                                    active ? 'font-semibold text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300',
+                                )}
+                            >
+                                {step.title}
+                            </span>
+                        </button>
+                    </li>
+                </Fragment>
             );
         })}
     </ol>
