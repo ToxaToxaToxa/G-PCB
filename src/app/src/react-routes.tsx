@@ -7,11 +7,12 @@ import MovementTuning from './features/MovementTuning';
 import Squaring from './features/Squaring';
 import { StatParent } from './features/Stats/StatParent';
 import Surfacing from './features/Surfacing';
+import HeightMapTool from './features/HeightMap';
 import ToolCard from './components/ToolCard';
 import { GiFlatPlatform } from 'react-icons/gi';
 import { FaGamepad, FaKeyboard } from 'react-icons/fa';
 import { TbRulerMeasure } from 'react-icons/tb';
-import { MdSquareFoot } from 'react-icons/md';
+import { MdGridOn, MdSquareFoot } from 'react-icons/md';
 import { Alarms } from './features/Stats/Alarms';
 import { Stats } from './features/Stats';
 import { Jobs } from './features/Stats/Jobs';
@@ -86,6 +87,13 @@ export const ReactRoutes = () => {
                                         description="Turn square material into round stock for rotary cutting"
                                         icon={BiSolidCylinder}
                                         link="/tools/rotary-surfacing"
+                                    />
+
+                                    <ToolCard
+                                        title="Height Map"
+                                        description="Probe a Z height map and apply it to G-code for PCB milling on uneven stock"
+                                        icon={MdGridOn}
+                                        link="/tools/height-map"
                                     />
 
                                     <ToolCard
@@ -182,6 +190,18 @@ export const ReactRoutes = () => {
                                 withFixedArea
                             >
                                 <Surfacing />
+                            </Page>
+                        }
+                    />
+                    <Route
+                        path="height-map"
+                        element={
+                            <Page
+                                title="Height Map"
+                                withGoBackButton
+                                withFixedArea
+                            >
+                                <HeightMapTool />
                             </Page>
                         }
                     />

@@ -394,6 +394,31 @@ const defaultState: State = {
             flood: false,
             mist: false,
         },
+        heightmap: {
+            grid: {
+                xStart: 0,
+                yStart: 0,
+                width: 100,
+                length: 80,
+                xPoints: 6,
+                yPoints: 5,
+            },
+            probe: {
+                clearanceZ: 2,
+                probeMinZ: -2,
+                probeFeed: 100,
+                probeFeedSlow: 20,
+                retract: 0.5,
+            },
+            apply: {
+                segmentLength: 1,
+                referenceMode: 'absolute',
+                refX: 0,
+                refY: 0,
+            },
+            maps: [],
+            activeMapId: null,
+        },
         visualizer: {
             minimized: false,
             // 3D View
