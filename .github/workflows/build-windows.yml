@@ -1,0 +1,33 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/pcb-milling
+
+env:
+  NODE_OPTIONS: --max-old-space-size=8192
+  # prerelease suffix for the app version, e.g. 1.6.4-pcb.3
+  COMMIT_COUNT: pcb.${{ github.run_number }}
+
+jobs:
+  build-windows:
+    name: Build Windows installer (unsigned)
+    runs-on: windows-latest
+    steps:
+      - name: Prepare VC++ Runtime
+        run: choco install -y vcredist2017
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup and build
+        uses: ./.github/actions/setup-build
+      - name: Build Windows binaries
+        run: yarn run build:windows
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: gSender-windows-x64
+          path: output/*.exe
+          compression-level: 0
+          retention-days: 14
