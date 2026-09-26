@@ -68,7 +68,13 @@ describe('Fusion 360 / EAGLE sample board', () => {
     });
 
     it.each(['top', 'bottom'] as const)('generates valid programs for the %s side', (side) => {
-        const settings: PcbSettings = { ...DEFAULT_PCB_SETTINGS, side };
+        // this board has gaps below the 60° bit's cut width, so use a fine 30° bit
+        const settings: PcbSettings = {
+            ...DEFAULT_PCB_SETTINGS,
+            side,
+            vbits: [{ id: 'v30', name: 'V-bit 30°', angle: 30, tipDiameter: 0.1 }],
+            isolation: { ...DEFAULT_PCB_SETTINGS.isolation, toolId: 'v30' },
+        };
         const model = buildBoardModel(project, side);
         const ops = buildOperations(model, settings);
         const kinds = ops.map((o) => o.kind);

@@ -23,17 +23,23 @@ const config = new WidgetConfig('pcbMilling');
 
 const loadSettings = (): PcbSettings => {
     const saved = config.get('', {}) as Partial<PcbSettings>;
+    // the bit list is not editable in the UI, so always take it from the defaults
+    const vbits = DEFAULT_PCB_SETTINGS.vbits;
+    const isolation = { ...DEFAULT_PCB_SETTINGS.isolation, ...saved.isolation };
+    if (!vbits.some((b) => b.id === isolation.toolId)) {
+        isolation.toolId = DEFAULT_PCB_SETTINGS.isolation.toolId;
+    }
     return {
         ...DEFAULT_PCB_SETTINGS,
         ...saved,
-        vbits: saved.vbits?.length ? saved.vbits : DEFAULT_PCB_SETTINGS.vbits,
-        isolation: { ...DEFAULT_PCB_SETTINGS.isolation, ...saved.isolation },
+        vbits,
+        isolation,
         drilling: { ...DEFAULT_PCB_SETTINGS.drilling, ...saved.drilling },
         outline: { ...DEFAULT_PCB_SETTINGS.outline, ...saved.outline },
     };
 };
 
-const inputStyle = 'text-base font-light text-center text-blue-500 px-1 w-full';
+const inputStyle = 'text-base font-light text-right text-blue-500 px-2 w-full';
 
 const Num = ({
     label,
@@ -50,11 +56,11 @@ const Num = ({
     step?: number;
     min?: number;
 }) => (
-    <label className="grid grid-cols-[1fr_7.5rem] items-center gap-2 text-sm">
+    <label className="grid grid-cols-[1fr_6rem_3.5rem] items-center gap-2 text-sm">
         <span className="text-gray-700 dark:text-gray-300">{label}</span>
+        {/* units sit in their own column: the input's overlay suffix collides with the number */}
         <ControlledInput
             type="number"
-            suffix={suffix}
             step={step}
             min={min}
             className={inputStyle}
@@ -63,6 +69,7 @@ const Num = ({
             immediateOnChange
             onChange={(e) => onChange(Number(e.target.value))}
         />
+        <span className="text-xs text-gray-500 dark:text-gray-400">{suffix}</span>
     </label>
 );
 
@@ -77,7 +84,7 @@ const Select = <T extends string>({
     options: { value: T; label: string }[];
     onChange: (v: T) => void;
 }) => (
-    <label className="grid grid-cols-[1fr_7.5rem] items-center gap-2 text-sm">
+    <label className="grid grid-cols-[1fr_10rem] items-center gap-2 text-sm">
         <span className="text-gray-700 dark:text-gray-300">{label}</span>
         <select
             className="border border-gray-300 dark:border-dark-lighter rounded px-1 py-1 bg-white dark:bg-dark text-sm"
@@ -250,7 +257,7 @@ const PcbMilling = () => {
                                 {project.files.map((f) => (
                                     <div key={f.name} className="grid grid-cols-[1fr_8rem] gap-2 items-center text-xs">
                                         <span className={cx('truncate', { 'text-gray-400': f.kind === 'ignored' })} title={f.name}>
-                                            {f.name}
+                                            {f.name.split('/').pop() || f.name}
                                         </span>
                                         <select
                                             className="border border-gray-300 dark:border-dark-lighter rounded px-1 bg-white dark:bg-dark"

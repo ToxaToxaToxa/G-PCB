@@ -6,12 +6,13 @@ export const DEFAULT_DRILLS = Array.from({ length: 20 }, (_, i) => Number(((i + 
 export const DEFAULT_PCB_SETTINGS: PcbSettings = {
     side: 'top',
     vbits: [
-        { id: 'v30', name: 'V-bit 30°', angle: 30, tipDiameter: 0.1 },
-        { id: 'v60', name: 'V-bit 60°', angle: 60, tipDiameter: 0.1 },
+        { id: 'v60-0.1', name: 'V-bit 60° / 0.1', angle: 60, tipDiameter: 0.1 },
+        { id: 'v60-0.2', name: 'V-bit 60° / 0.2', angle: 60, tipDiameter: 0.2 },
+        { id: 'v60-0.3', name: 'V-bit 60° / 0.3', angle: 60, tipDiameter: 0.3 },
     ],
     isolation: {
         enabled: true,
-        toolId: 'v30',
+        toolId: 'v60-0.1',
         depth: 0.05,
         passes: 2,
         overlap: 0.4,
