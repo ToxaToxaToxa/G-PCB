@@ -59,7 +59,7 @@ const Workspace = () => {
             }, 100);
         }
 
-        document.title = `gSender ${pkg.version}`;
+        document.title = `G-PCB ${pkg.version}`;
     }, [location]);
 
     useDarkMode();

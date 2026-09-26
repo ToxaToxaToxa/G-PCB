@@ -39,7 +39,9 @@ const settings: ConfigSettings = {
     },
     name: pkg.name,
     productName: pkg.name,
-    version: pkg.version,
+    // G-PCB numbers its own releases; stored settings are migrated by the
+    // gSender version the fork is based on, not by the G-PCB version
+    version: pkg.gsenderVersion ?? pkg.version,
     webroot: webroot,
     log: {
         level: 'warn', // trace, debug, info, warn, error

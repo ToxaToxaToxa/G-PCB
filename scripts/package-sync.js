@@ -186,6 +186,8 @@ const dependencySources = pkg.dependencies || {};
 
 //pkgApp.name = pkg.name; // Exclude the name field
 pkgApp.version = pkg.version;
+// G-PCB: the gSender release this is based on, used for settings migrations
+pkgApp.gsenderVersion = pkg.gsenderVersion;
 pkgApp.homepage = pkg.homepage;
 pkgApp.author = pkg.author;
 pkgApp.license = pkg.license;

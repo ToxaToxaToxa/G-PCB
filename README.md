@@ -33,6 +33,16 @@ yarn run build-latest
 yarn run build:windows        # installer in output/
 ```
 
+A release build (plain version number, as the updater expects) uses the production prebuild instead:
+
+```sh
+npm run prebuild-prod
+yarn run build
+yarn run build:windows        # G-PCB-<version>-x64.exe, .blockmap and latest.yml
+```
+
+Attach those three files to a GitHub release tagged `v<version>`; installed copies offer the update on their next start. The `version` in `package.json` is the G-PCB version; `gsenderVersion` is the gSender release it is based on and drives the settings migrations.
+
 Telemetry is off unless you build with your own keys: copy `.env.example` to `.env` and fill in the Sentry DSN (crash reports) and the PostHog project (opt-in usage statistics).
 
 ## License

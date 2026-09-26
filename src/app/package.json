@@ -122,5 +122,6 @@
     "type": "git",
     "url": "https://github.com/ToxaToxaToxa/gsender"
   },
-  "version": "1.6.4"
+  "version": "1.0.0",
+  "gsenderVersion": "1.6.4"
 }
