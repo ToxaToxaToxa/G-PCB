@@ -174,8 +174,9 @@ const PcbMilling = () => {
     };
 
     const onFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const list = e.target.files;
-        if (!list || !list.length) return;
+        // copy first: clearing the input empties the live FileList
+        const list = Array.from(e.target.files ?? []);
+        if (!list.length) return;
         try {
             const files = await readInputFiles(list);
             e.target.value = '';
