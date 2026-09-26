@@ -1,7 +1,7 @@
 import { evaluateMacroExpression } from '../lib/macroExpr';
 import { parseGerber } from '../lib/gerber';
 import { parseExcellon } from '../lib/excellon';
-import { detectLayer } from '../lib/board';
+import { buildBoardModel, detectLayer, parseProject } from '../lib/board';
 import { boundsOf, totalArea, toExPolygons } from '../lib/geometry';
 
 const header = '%FSLAX34Y34*%\n%MOMM*%\n';
@@ -101,5 +101,53 @@ describe('layer detection', () => {
         ['x.gbr', '%TF.FileFunction,Copper,L2,Bot*%\n' + gerber, 'bottom'],
     ])('%s -> %s', (name, content, kind) => {
         expect(detectLayer({ name, content })).toBe(kind);
+    });
+});
+
+describe('board outline', () => {
+    // EAGLE's default 160 x 100 mm board left around the real 67.31 x 35.56 mm board
+    const profile = `${header}%ADD10C,0.254*%
+D10*
+X0Y0D02*
+X1600000Y0D01*
+X1600000Y1000000D01*
+X0Y1000000D01*
+X0Y0D01*
+X127000Y101600D02*
+X800100Y101600D01*
+X800100Y457200D01*
+X127000Y457200D01*
+X127000Y101600D01*
+M02*`;
+    const copper = `${header}%ADD10C,0.5*%
+D10*
+X200000Y200000D02*
+X700000Y200000D01*
+M02*`;
+
+    it('uses the inner contour that holds the copper, not a frame around it', () => {
+        const project = parseProject([
+            { name: 'profile.gbr', content: profile },
+            { name: 'copper_top.gbr', content: copper },
+        ]);
+        const model = buildBoardModel(project, 'top');
+        expect(model.width).toBeCloseTo(67.31, 1);
+        expect(model.height).toBeCloseTo(35.56, 1);
+        expect(model.warnings).toContainEqual(expect.stringMatching(/160\.0 × 100\.0 mm frame/));
+    });
+
+    it('keeps an inner contour without copper as a cutout', () => {
+        const outside = `${header}%ADD10C,0.5*%
+D10*
+X900000Y600000D02*
+X1400000Y600000D01*
+M02*`;
+        const project = parseProject([
+            { name: 'profile.gbr', content: profile },
+            { name: 'copper_top.gbr', content: outside },
+        ]);
+        const model = buildBoardModel(project, 'top');
+        expect(model.width).toBeCloseTo(160, 1);
+        expect(model.board.length).toBeGreaterThan(1);
     });
 });

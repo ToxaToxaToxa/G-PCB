@@ -7,6 +7,8 @@ interface Props {
     model: BoardModel;
     operations: Operation[];
     selectedId: string | null;
+    /** Stock outline from X0 Y0; the model is then the whole panel */
+    stock?: { width: number; height: number };
 }
 
 const PAD = 4; // mm around the board
@@ -26,7 +28,7 @@ const COLORS: Record<string, string> = {
     outline: '#dc2626',
 };
 
-const PcbPreview = ({ model, operations, selectedId }: Props) => {
+const PcbPreview = ({ model, operations, selectedId, stock }: Props) => {
     const copper = useMemo(() => pathData(model.copper), [model.copper]);
     const board = useMemo(() => pathData(model.board), [model.board]);
 
@@ -41,6 +43,19 @@ const PcbPreview = ({ model, operations, selectedId }: Props) => {
             role="img"
             aria-label="PCB toolpath preview"
         >
+            {stock && (
+                <rect
+                    x={0}
+                    y={-stock.height}
+                    width={stock.width}
+                    height={stock.height}
+                    fill="#b45309"
+                    fillOpacity={0.08}
+                    stroke="#92400e"
+                    strokeWidth={hairline * 1.5}
+                    strokeDasharray={`${hairline * 6} ${hairline * 4}`}
+                />
+            )}
             {board && (
                 <path d={board} fill="#14532d" fillOpacity={0.15} stroke="#15803d" strokeWidth={hairline * 1.5} fillRule="evenodd" />
             )}

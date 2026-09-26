@@ -16,6 +16,7 @@ import {
     strokeRound,
     toExPolygons,
     toInt,
+    totalArea,
     transformPaths,
     union,
     unionAll,
@@ -112,6 +113,21 @@ export interface BoardModel {
 const LINE = 0.02;
 
 /**
+ * Index of the smallest contour that still holds all the copper. A frame
+ * drawn around the real board (EAGLE's default 160 x 100 mm board, a panel
+ * border) would otherwise make the board look like a cutout of the frame.
+ */
+const copperContour = (fills: { outer: Paths[number]; area: number }[], copper: Paths) => {
+    if (fills.length < 2 || !copper.length) return 0;
+    const all = unionAll(copper);
+    const tolerance = Math.max(totalArea(all) * 1e-4, 1e-4);
+    for (let i = fills.length - 1; i > 0; i--) {
+        if (totalArea(difference(all, [fills[i].outer])) <= tolerance) return i;
+    }
+    return 0;
+};
+
+/**
  * Builds the board region from the outline layer. Stroked outlines are
  * re-drawn as thin lines so the centre line of the drawing is the board edge.
  */
@@ -119,6 +135,7 @@ export const buildBoardShape = (
     outline: GerberImage,
     holes: DrillHole[],
     warnings: string[],
+    copper: Paths = [],
 ): Paths => {
     const lines = outline.strokes.map((s) => s.points.map(([x, y]) => toInt(x, y)));
     let drawn = strokeRound(lines, LINE);
@@ -133,14 +150,22 @@ export const buildBoardShape = (
         .map((e) => ({ outer: e.outer, area: area(e.outer) }))
         .sort((a, b) => b.area - a.area);
 
-    const main = fills[0];
+    const mainIndex = copperContour(fills, copper);
+    const main = fills[mainIndex];
     let board = offset([main.outer], -LINE / 2);
     let skipped = 0;
     let drilled = 0;
-    for (const f of fills.slice(1)) {
+    if (mainIndex > 0) {
+        const b = boundsOf([fills[0].outer]);
+        const size = b ? `${(b.maxX - b.minX - LINE).toFixed(1)} × ${(b.maxY - b.minY - LINE).toFixed(1)} mm ` : '';
+        warnings.push(`The outline has a ${size}frame around the board; the inner contour that holds the copper is used as the board.`);
+    }
+    for (const [index, f] of fills.entries()) {
+        if (index === mainIndex) continue;
         const inside = pointInPath(f.outer[0], main.outer) !== 0;
         if (!inside) {
-            skipped++;
+            // frames around the board are reported above
+            if (index > mainIndex) skipped++;
             continue;
         }
         const cut = offset([f.outer], -LINE / 2);
@@ -173,7 +198,8 @@ export const buildBoardModel = (project: ParsedProject, side: BoardSide): BoardM
     const image = side === 'top' ? project.top : project.bottom;
     let board: Paths = [];
     if (project.outline) {
-        board = buildBoardShape(project.outline, project.holes, warnings);
+        const copper = [...(project.top?.polygons ?? []), ...(project.bottom?.polygons ?? [])];
+        board = buildBoardShape(project.outline, project.holes, warnings, copper);
     }
     const hasOutline = board.length > 0;
 

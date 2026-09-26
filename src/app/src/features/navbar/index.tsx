@@ -1,6 +1,7 @@
 import { FaTasks } from 'react-icons/fa';
 import { RiToolsFill } from 'react-icons/ri';
 import { IoSpeedometerOutline } from 'react-icons/io5';
+import { LuCircuitBoard } from 'react-icons/lu';
 import cx from 'classnames';
 
 import Carve from './assets/Carve.svg';
@@ -62,6 +63,12 @@ export const NavBar = () => {
                     svg={Carve}
                     label="Carve"
                     onClick={(e) => checkIfNeedsBlock(e, '/')}
+                />
+                <NavbarLink
+                    href="pcb"
+                    icon={LuCircuitBoard}
+                    label="PCB"
+                    onClick={(e) => checkIfNeedsBlock(e, 'pcb')}
                 />
                 <NavbarLink
                     href="stats"
