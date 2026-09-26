@@ -6,6 +6,9 @@ const isInDevMode = import.meta.env.MODE === 'development';
 const posthogToken = import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN;
 const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
 
+/** Usage statistics exist only in builds made with a PostHog project in .env */
+export const isUsageStatsConfigured = Boolean(posthogToken && posthogHost);
+
 if (!isInDevMode && posthogToken && posthogHost) {
     posthog.init(posthogToken, {
         api_host: posthogHost,

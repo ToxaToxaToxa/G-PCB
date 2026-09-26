@@ -11,6 +11,7 @@ import {
 import Button from 'app/components/Button';
 import { usePostHog } from '@posthog/react';
 import store from 'app/store';
+import { isUsageStatsConfigured } from 'app/posthog-config';
 
 /** Wait before showing the consent sheet so startup UI can settle. */
 const SHOW_DELAY_MS = 3000;
@@ -21,7 +22,8 @@ const isDev =
         : import.meta?.env?.MODE === 'development';
 
 const DataCollection = () => {
-    if (isDev) return null;
+    // nothing to consent to when the build has no statistics project
+    if (isDev || !isUsageStatsConfigured) return null;
 
     const posthog = usePostHog();
     const [open, setOpen] = useState(false);

@@ -72,6 +72,7 @@ import isElectron from "is-electron";
 import { THEMES_T } from "app/features/Visualizer/definitions";
 import { JSX } from "react";
 import posthog from "posthog-js";
+import { isUsageStatsConfigured } from "app/posthog-config";
 import { updateToolchangeContext } from "app/features/Helper/Wizard.tsx";
 
 export interface SettingsMenuSection {
@@ -297,6 +298,8 @@ export const SettingsMenu: SettingsMenuSection[] = [
 					{
 						label: "Collect usage data",
 						key: "workspace.collectUsageDataStatus",
+						// G-PCB: only offered when the build has a statistics project
+						hidden: () => !isUsageStatsConfigured,
 						description:
 							"This info is collected anonymously to help us improve gSender by seeing how people use it.",
 						type: "boolean",
