@@ -79,6 +79,19 @@ yarn run build:windows        # G-PCB-<version>-x64.exe, .blockmap and latest.ym
 
 Attach those three files to a GitHub release tagged `v<version>`. The `version` in `package.json` is the G-PCB version; `gsenderVersion` is the gSender release G-PCB is based on and drives the settings migrations.
 
+### Updating from gSender
+
+G-PCB keeps gSender's full history, so new gSender releases merge in like any other branch:
+
+```sh
+git remote add upstream https://github.com/Sienci-Labs/gsender.git
+git config remote.upstream.tagOpt --no-tags   # gSender's old v1.0.x tags would clash with G-PCB's
+git fetch upstream
+git merge upstream/master                     # or the commit of a gSender release
+```
+
+Conflicts can only come from places G-PCB changed: branding (`package.json`, `src/main.js`, icons, splash), telemetry setup, the navigation and routes, and the README. Afterwards set `gsenderVersion` in `package.json` to the merged gSender release, run the tests, and release a new G-PCB version.
+
 The PCB code lives in `src/app/src/features/PcbWizard`, `PcbMilling` and `HeightMap`; tests run with `node_modules/.bin/jest --config jest.config.js --testPathPatterns="PcbWizard|PcbMilling|HeightMap"`.
 
 ## Privacy
