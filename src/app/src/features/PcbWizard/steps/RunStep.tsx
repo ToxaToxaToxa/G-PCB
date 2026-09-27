@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import cx from 'classnames';
 
-import { VISUALIZER_PRIMARY, WORKFLOW_STATE_PAUSED } from 'app/constants';
+import { WORKFLOW_STATE_PAUSED } from 'app/constants';
 import controller from 'app/lib/controller';
-import { uploadGcodeFileToServer } from 'app/lib/fileupload';
-import { toast } from 'app/lib/toaster';
 import { Button } from 'app/components/Button';
 import { useTypedSelector } from 'app/hooks/useTypedSelector';
 
@@ -12,21 +10,26 @@ import { Card } from '../../PcbMilling/components/controls';
 import { ProbeSettings, WizardSettings } from '../definitions';
 import { bitKey } from '../lib/machine';
 import { PlannedOperation, programFileName } from '../lib/plan';
+import { Program } from '../lib/programs';
+import { Warnings } from '../components/Layout';
 import { updateSession, useSession } from '../lib/session';
 import MachineStatus, { useMachine } from '../components/MachineStatus';
 import { useZeroProbe } from '../useZeroProbe';
 
 interface Props {
     ops: PlannedOperation[];
+    programs: Map<string, Program>;
+    /** Programs are being regenerated: nothing may be loaded or started */
+    updating: boolean;
     settings: WizardSettings;
     projectName: string;
     reference: { x: number; y: number };
     heightMapReady: boolean;
-    gcodeFor: (op: PlannedOperation) => string;
+    onLoad: (op: PlannedOperation, index: number) => Promise<boolean>;
     probe: ProbeSettings;
 }
 
-const RunStep = ({ ops, settings, projectName, reference, heightMapReady, gcodeFor, probe }: Props) => {
+const RunStep = ({ ops, programs, updating, settings, projectName, reference, heightMapReady, onLoad, probe }: Props) => {
     const session = useSession();
     const { idle, connected } = useMachine();
     const file = useTypedSelector((s) => s.file);
@@ -43,27 +46,30 @@ const RunStep = ({ ops, settings, projectName, reference, heightMapReady, gcodeF
     const index = ops.indexOf(op);
     const key = op ? bitKey(op, settings) : '';
     const ref = session.reference ?? reference;
-    const zeroProbe = useZeroProbe(() => updateSession({ zeroBit: key, reference: ref }));
+    // the bit being probed is fixed when probing starts, whatever is selected meanwhile
+    const probingBit = useRef<string | null>(null);
+    const zeroProbe = useZeroProbe(() => updateSession({ zeroBit: probingBit.current, reference: ref }));
+    const probing = zeroProbe.status === 'running';
 
     if (!op) {
         return <p className="text-sm text-gray-500">No programs in the plan.</p>;
     }
 
     const name = programFileName(projectName, index, op);
-    const loaded = file.fileLoaded && !file.fileProcessing && file.name === name;
+    const program = programs.get(op.id);
+    // the loaded file must be this program's current G-code, not an older one with the same name
+    const loaded =
+        file.fileLoaded &&
+        !file.fileProcessing &&
+        file.name === name &&
+        session.loaded?.opId === op.id &&
+        session.loaded.hash === program?.hash;
     const running = session.runningId !== null;
     const zeroOk = session.zeroBit === key;
     const needsMap = op.kind === 'isolation' && settings.applyHeightMap && !heightMapReady && !session.skipHeightMap;
     const previous = index > 0 ? ops[index - 1] : null;
     const sameBit = previous && bitKey(previous, settings) === key;
 
-    const load = async () => {
-        try {
-            await uploadGcodeFileToServer(new File([gcodeFor(op)], name), controller.port, VISUALIZER_PRIMARY);
-        } catch (e) {
-            toast.error(`Unable to load ${name}: ${(e as Error).message}`);
-        }
-    };
 
     // the session marks the program as running when the job starts (see onJobStart),
     // so a start from the Carve screen is tracked the same way
@@ -97,12 +103,15 @@ const RunStep = ({ ops, settings, projectName, reference, heightMapReady, gcodeF
                             <div className="flex flex-wrap gap-2">
                                 <Button
                                     variant="primary"
-                                    onClick={() => zeroProbe.start(probe, ref)}
-                                    disabled={!idle || running || zeroProbe.status === 'running'}
+                                    onClick={() => {
+                                        probingBit.current = key;
+                                        zeroProbe.start(probe, ref);
+                                    }}
+                                    disabled={!idle || running || probing}
                                 >
                                     Probe Z0
                                 </Button>
-                                <Button onClick={() => updateSession({ zeroBit: key })} disabled={running}>
+                                <Button onClick={() => updateSession({ zeroBit: key })} disabled={running || probing}>
                                     Z0 is already right
                                 </Button>
                             </div>
@@ -118,13 +127,18 @@ const RunStep = ({ ops, settings, projectName, reference, heightMapReady, gcodeF
                             Probe the height map first, or mark the blank as flat in the Height map step.
                         </p>
                     )}
+                    {program && <Warnings items={program.warnings} />}
+                    {updating && <p className="text-xs text-orange-500">The programs are being updated…</p>}
+                    {!updating && file.name === name && !loaded && !running && (
+                        <p className="text-xs text-orange-500">The loaded file is an older version of this program: load it again.</p>
+                    )}
                     <p className="text-xs text-gray-500">Remove the probe clip before starting.</p>
                     <div className="flex flex-wrap gap-2">
-                        <Button onClick={load} disabled={running || !connected}>
+                        <Button onClick={() => onLoad(op, index)} disabled={running || !connected || updating || probing}>
                             {loaded ? 'Loaded' : 'Load'}
                         </Button>
                         {!running ? (
-                            <Button variant="primary" onClick={start} disabled={!idle || !loaded || !zeroOk || needsMap}>
+                            <Button variant="primary" onClick={start} disabled={!idle || !loaded || !zeroOk || needsMap || updating || probing}>
                                 Start
                             </Button>
                         ) : (
@@ -175,7 +189,7 @@ const RunStep = ({ ops, settings, projectName, reference, heightMapReady, gcodeF
                         <button
                             type="button"
                             key={o.id}
-                            disabled={running}
+                            disabled={running || probing}
                             onClick={() => setCurrent(i)}
                             className={cx(
                                 'grid grid-cols-[1.5rem_1fr_auto] gap-2 items-center rounded p-2 text-left',

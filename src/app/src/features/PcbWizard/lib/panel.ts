@@ -56,8 +56,11 @@ export const layoutPanel = (boardWidth: number, boardHeight: number, stock: Stoc
     let cols = stock.fill ? fit.cols : Math.max(1, Math.round(stock.cols));
     let rows = stock.fill ? fit.rows : Math.max(1, Math.round(stock.rows));
     if (!stock.fill && (cols > fit.cols || rows > fit.rows)) {
+        // never place a board past the edge of the blank: that cuts into clamps or the bed
+        cols = Math.min(cols, fit.cols);
+        rows = Math.min(rows, fit.rows);
         warnings.push(
-            `${cols} × ${rows} boards do not fit on the ${stock.width} × ${stock.height} mm stock; at most ${fit.cols} × ${fit.rows} fit.`,
+            `${stock.cols} × ${stock.rows} boards do not fit on the ${stock.width} × ${stock.height} mm stock; ${cols} × ${rows} are placed.`,
         );
     }
     if (cols * rows === 0) {

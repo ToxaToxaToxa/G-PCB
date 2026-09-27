@@ -211,4 +211,12 @@ describe('applyHeightMap', () => {
         expect(lines[lines.length - 1]).toBe('G2 X50 Y0');
         expect(lines.every((l) => !/^[XYZ]/.test(l))).toBe(true);
     });
+
+    it('never emits NaN in relative mode after an unreadable arc', () => {
+        const input = ['G90', 'G0 X0 Y0 Z0', 'G91', 'G2 X10 Y0', 'G1 X5 Y5'].join('\n');
+        const { gcode, stats } = applyHeightMap(input, planeMap);
+        expect(gcode).not.toMatch(/NaN/);
+        expect(gcode.split('\n').pop()).toBe('G1 X5 Y5');
+        expect(stats.warnings).toContainEqual(expect.stringMatching(/not compensated/));
+    });
 });

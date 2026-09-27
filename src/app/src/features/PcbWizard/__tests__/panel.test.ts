@@ -32,9 +32,15 @@ describe('layout', () => {
         expect(auto.copies[1][0]).toBeCloseTo(3 + board.height + 3, 6);
     });
 
-    it('warns when a fixed array does not fit', () => {
-        const l = layoutPanel(board.width, board.height, stock({ fill: false, cols: 3, rows: 3, rotation: 0 }));
-        expect(l.warnings[0]).toMatch(/do not fit/);
+    it('places only the boards of a fixed array that fit on the blank', () => {
+        const s = stock({ fill: false, cols: 3, rows: 3, rotation: 0 });
+        const l = layoutPanel(board.width, board.height, s);
+        expect(l.warnings[0]).toMatch(/3 × 3 boards do not fit.*3 × 1 are placed/);
+        expect([l.cols, l.rows]).toEqual([3, 1]);
+        for (const [x, y] of l.copies) {
+            expect(x + l.boardWidth).toBeLessThanOrEqual(s.width - s.margin + 1e-9);
+            expect(y + l.boardHeight).toBeLessThanOrEqual(s.height - s.margin + 1e-9);
+        }
         expect(layoutPanel(200, 200, stock()).copies).toHaveLength(0);
     });
 });

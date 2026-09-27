@@ -43,6 +43,7 @@ import { MachineProfile } from 'app/definitions/firmware';
 import { SPINDLE } from 'app/lib/definitions/gcode_virtualization';
 import { defaultATCIMacros } from 'app/features/ATC/assets/defaultATCIMacros.ts';
 import { DEFAULT_PCB_SETTINGS } from 'app/features/PcbMilling/lib/defaults';
+import { DEFAULT_WIZARD_SETTINGS } from 'app/features/PcbWizard/lib/defaults';
 
 const [M3] = SPINDLE_MODES;
 
@@ -396,6 +397,7 @@ const defaultState: State = {
             mist: false,
         },
         pcbMilling: DEFAULT_PCB_SETTINGS,
+        pcbWizard: DEFAULT_WIZARD_SETTINGS,
         heightmap: {
             grid: {
                 xStart: 0,

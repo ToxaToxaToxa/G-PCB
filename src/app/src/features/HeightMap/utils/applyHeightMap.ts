@@ -299,6 +299,16 @@ export const applyHeightMap = (
             continue;
         }
 
+        // Relative moves are emitted as deltas from the machine position; once
+        // that is unknown (after an arc that could not be read) they can only
+        // be passed through, or they would come out as X NaN
+        if (!absolute && !(['x', 'y', 'z'] as Axis[]).every((axis) => Number.isFinite(out[axis]))) {
+            warnings.add('Relative (G91) moves after an unreadable arc are not compensated.');
+            output.push(withMotionWord(originalLine));
+            Object.assign(pos, target);
+            continue;
+        }
+
         const segmentPoints: Vec[] = [];
 
         if (isArc) {

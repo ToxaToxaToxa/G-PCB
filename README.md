@@ -111,6 +111,16 @@ G-PCB is free software under the [GNU General Public License v3](LICENSE), like 
 <details>
 <summary>Expand to see all version notes</summary>
 
+### 1.0.2 (September 27, 2026)
+- Start is allowed only when the loaded file is the program's current G-code, so an isolation program loaded before the height map was probed can no longer run without it
+- Z0 is recorded for the bit that was probed, even if another program was selected meanwhile
+- Wizard settings (tools, drills, blank, stage order, probe) are kept after a restart
+- Height map notes, such as toolpath points outside the probed area, are shown in the Plan and Run steps
+- Changing the plan during a job keeps "done" only for unchanged programs and asks for a new height map and Z0 when the isolation area moved
+- A fixed board array that does not fit is cut down to the boards that fit, never placed past the blank
+- Height map: no invalid X NaN moves in relative (G91) mode after an unreadable arc
+- No usage statistics consent dialog while the build has no statistics project
+
 ### 1.0.1 (September 27, 2026)
 - New G-PCB splash screen and application icon everywhere
 - Updates and links point to the renamed ToxaToxaToxa/G-PCB repository

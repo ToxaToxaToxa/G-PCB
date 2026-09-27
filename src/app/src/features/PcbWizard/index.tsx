@@ -13,7 +13,6 @@ import { uploadGcodeFileToServer } from 'app/lib/fileupload';
 import { toast } from 'app/lib/toaster';
 import { Button } from 'app/components/Button';
 import WidgetConfig from 'app/features/WidgetConfig/WidgetConfig';
-import { applyHeightMap } from 'app/features/HeightMap/utils/applyHeightMap';
 import { isMapComplete } from 'app/features/HeightMap/utils/heightMap';
 
 import { InputFile, LayerKind } from '../PcbMilling/definitions';
@@ -24,7 +23,8 @@ import { DEFAULT_ORDER, DEFAULT_WIZARD_SETTINGS } from './lib/defaults';
 import { layoutPanel, panelizeModel } from './lib/panel';
 import { PlannedOperation, planOperations, planWarnings, programFileName } from './lib/plan';
 import { bitKey, heightMapGrid, referencePoint } from './lib/machine';
-import { resetMachineState, resetSession, updateSession, useSession } from './lib/session';
+import { Program, buildProgram, keepResults } from './lib/programs';
+import { WizardSession, getSession, resetMachineState, resetSession, updateSession, useSession } from './lib/session';
 import Stepper, { StepInfo } from './components/Stepper';
 import ProjectStep from './steps/ProjectStep';
 import StockStep from './steps/StockStep';
@@ -131,7 +131,18 @@ const PcbWizard = () => {
                 } catch (e) {
                     toast.error(`Unable to generate the programs: ${(e as Error).message}`);
                 }
-                updateSession({ ops: next, builtFrom: { project, settings: key } });
+                const prev = getSession();
+                const patch: Partial<WizardSession> = { ops: next, builtFrom: { project, settings: key } };
+                if (prev.ops.length) {
+                    // the plan changed under a job in progress: forget what no longer holds
+                    patch.results = keepResults(prev.ops, next, prev.results);
+                    const sameArea = JSON.stringify(heightMapGrid(prev.ops, settings)) === JSON.stringify(heightMapGrid(next, settings));
+                    if (!sameArea) {
+                        // the map and its reference point were for the old isolation area
+                        Object.assign(patch, { heightMapId: null, reference: null, zeroBit: null });
+                    }
+                }
+                updateSession(patch);
                 setSelected(null);
                 setBusy(false);
             }, 30);
@@ -178,25 +189,33 @@ const PcbWizard = () => {
         setSettings((prev) => ({ ...prev, [stage]: { ...prev[stage], ...patch } }));
     const updateProbe = (patch: Partial<ProbeSettings>) => setSettings((prev) => ({ ...prev, probe: { ...prev.probe, ...patch } }));
 
-    // Z0 is set at the reference point, so the map is used relative to it
-    const gcodeFor = (op: PlannedOperation) =>
-        op.kind === 'isolation' && settings.applyHeightMap && heightMap && !session.skipHeightMap
-            ? applyHeightMap(op.gcode, heightMap, {
-                  segmentLength: 1,
-                  referenceMode: 'point',
-                  refX: reference.x,
-                  refY: reference.y,
-              }).gcode
-            : op.gcode;
+    // The G-code actually sent: isolation follows the map when it applies
+    const mapInUse = settings.applyHeightMap && !session.skipHeightMap ? heightMap : null;
+    const programs = useMemo(
+        () => new Map<string, Program>(ops.map((op) => [op.id, buildProgram(op, mapInUse, reference)])),
+        [ops, mapInUse, reference.x, reference.y],
+    );
+    const gcodeFor = (op: PlannedOperation) => programs.get(op.id)?.gcode ?? op.gcode;
+    const mapWarnings = [...new Set([...programs.values()].flatMap((p) => p.warnings))];
 
-    const onLoad = async (op: PlannedOperation, index: number) => {
+    const loadProgram = async (op: PlannedOperation, index: number) => {
         const name = programFileName(projectName, index, op);
+        const program = programs.get(op.id);
+        if (!program) return false;
         try {
-            await uploadGcodeFileToServer(new File([gcodeFor(op)], name), controller.port, VISUALIZER_PRIMARY);
-            setSelected(op.id);
-            toast.success(`Loaded ${name}`);
+            await uploadGcodeFileToServer(new File([program.gcode], name), controller.port, VISUALIZER_PRIMARY);
+            updateSession({ loaded: { opId: op.id, hash: program.hash, name } });
+            return true;
         } catch (e) {
             toast.error(`Unable to load ${name}: ${(e as Error).message}`);
+            return false;
+        }
+    };
+
+    const onLoad = async (op: PlannedOperation, index: number) => {
+        if (await loadProgram(op, index)) {
+            setSelected(op.id);
+            toast.success(`Loaded ${programFileName(projectName, index, op)}`);
         }
     };
 
@@ -212,7 +231,7 @@ const PcbWizard = () => {
         settings.tools.some((t) => t.kind === 'vbit') && settings.tools.some((t) => t.kind === 'endmill') && settings.drills.length > 0;
     // these need a decision; notes about the files (panel warnings) are shown but do not flag the step
     const problems = [...(layout?.warnings ?? []), ...planWarnings(settings)];
-    const warnings = [...problems, ...(panel?.warnings ?? [])];
+    const warnings = [...problems, ...(panel?.warnings ?? []), ...mapWarnings];
     const planReady = ops.length > 0 && !stale;
     const allDone = ops.length > 0 && ops.every((op) => session.results[op.id] === 'done');
     const anyStopped = ops.some((op) => session.results[op.id] === 'stopped');
@@ -300,11 +319,13 @@ const PcbWizard = () => {
             return (
                 <RunStep
                     ops={ops}
+                    programs={programs}
+                    updating={busy || stale}
                     settings={settings}
                     projectName={projectName}
                     reference={reference}
                     heightMapReady={!!heightMap}
-                    gcodeFor={gcodeFor}
+                    onLoad={loadProgram}
                     probe={settings.probe}
                 />
             );

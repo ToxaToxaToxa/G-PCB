@@ -19,6 +19,7 @@ import { Probe } from 'app/features/Probe/definitions';
 import { Rotary } from 'app/features/Rotary/definitions';
 import { HeightMapWidgetState } from 'app/features/HeightMap/definitions';
 import { PcbSettings } from 'app/features/PcbMilling/definitions';
+import { WizardSettings } from 'app/features/PcbWizard/definitions';
 import { Spindle, SpindleState } from 'app/features/Spindle/definitions';
 import { Surfacing } from 'app/features/Surfacing/definitions';
 import {
@@ -249,6 +250,7 @@ export interface State {
         surfacing: Surfacing;
         heightmap: HeightMapWidgetState;
         pcbMilling: PcbSettings;
+        pcbWizard: WizardSettings;
         visualizer: Visualizer;
         atc: ATC;
     };

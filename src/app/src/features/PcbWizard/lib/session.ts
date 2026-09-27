@@ -38,6 +38,8 @@ export interface WizardSession {
     results: Record<string, ProgramResult>;
     /** Program that was started and has not ended yet */
     runningId: string | null;
+    /** What the wizard loaded last: a program is startable only while this is its current G-code */
+    loaded: { opId: string; hash: string; name: string } | null;
 }
 
 const initial: WizardSession = {
@@ -55,6 +57,7 @@ const initial: WizardSession = {
     skipHeightMap: false,
     results: {},
     runningId: null,
+    loaded: null,
 };
 
 let session = initial;
@@ -69,7 +72,16 @@ export const updateSession = (patch: Partial<WizardSession>) => {
 
 /** Machine state for a new blank: zero, map and results start over. */
 export const resetMachineState = () =>
-    updateSession({ xySet: false, reference: null, zeroBit: null, heightMapId: null, skipHeightMap: false, results: {}, runningId: null });
+    updateSession({
+        xySet: false,
+        reference: null,
+        zeroBit: null,
+        heightMapId: null,
+        skipHeightMap: false,
+        results: {},
+        runningId: null,
+        loaded: null,
+    });
 
 export const resetSession = () => updateSession(initial);
 

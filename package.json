@@ -1,6 +1,6 @@
 {
   "name": "gSender",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "gsenderVersion": "1.6.4",
   "description": "G-PCB: gSender with a step-by-step PCB milling workflow for GRBL CNC machines",
   "author": {
