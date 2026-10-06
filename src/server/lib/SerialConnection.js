@@ -91,7 +91,11 @@ class SerialConnection extends EventEmitter {
                 this.port && this.port.destroy();
                 this.port = null;
             }
-            this.emit('error', err);
+            // An 'error' event without a listener throws and takes the whole
+            // server down; the open callback above already reports the error.
+            if (this.listenerCount('error') > 0) {
+                this.emit('error', err);
+            }
         },
     };
 

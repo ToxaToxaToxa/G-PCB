@@ -111,6 +111,9 @@ G-PCB is free software under the [GNU General Public License v3](LICENSE), like 
 <details>
 <summary>Expand to see all version notes</summary>
 
+### 1.0.3 (October 6, 2026)
+- Fixed a crash when an Ethernet (telnet) connection could not reach the machine, for example ENETUNREACH on 192.168.5.1 with no network cable: the error is now shown instead of closing G-PCB
+
 ### 1.0.2 (September 27, 2026)
 - Start is allowed only when the loaded file is the program's current G-code, so an isolation program loaded before the height map was probed can no longer run without it
 - Z0 is recorded for the bit that was probed, even if another program was selected meanwhile

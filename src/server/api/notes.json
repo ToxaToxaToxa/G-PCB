@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.3",
+    "date": "October 6, 2026",
+    "notes": [
+      "Fixed a crash when an Ethernet (telnet) connection could not reach the machine, for example ENETUNREACH on 192.168.5.1 with no network cable: the error is now shown instead of closing G-PCB"
+    ]
+  },
+  {
     "version": "1.0.2",
     "date": "September 27, 2026",
     "notes": [
@@ -20,19 +27,6 @@
       "New G-PCB splash screen and application icon everywhere",
       "Updates and links point to the renamed ToxaToxaToxa/G-PCB repository",
       "These notes in the app now describe G-PCB instead of gSender"
-    ]
-  },
-  {
-    "version": "1.0.0",
-    "date": "September 27, 2026",
-    "notes": [
-      "First release: PCB section with the eight-step wizard, from Gerber files to finished boards",
-      "Board arrays on a blank with best-fit rotation; frames around a board are recognised",
-      "Isolation, drilling, large hole milling and outline with tabs for all boards on the blank",
-      "Work zero, Z0 probing at a fixed reference point, height map probing, guided bit changes",
-      "Programs started from the Carve screen are tracked by the wizard",
-      "Based on gSender 1.6.4",
-      "</details>"
     ]
   }
 ]

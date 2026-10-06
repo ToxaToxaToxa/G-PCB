@@ -88,7 +88,12 @@ class Connection extends EventEmitter {
         },
         error: (err) => {
             log.error(`Connection error: ${err}`);
-            this.emit('error', err);
+            // Controllers subscribe only after the firmware is identified; a
+            // connect error before that (ENETUNREACH on an Ethernet machine) had
+            // no listener, so emit() threw and crashed the server.
+            if (this.listenerCount('error') > 0) {
+                this.emit('error', err);
+            }
             if (this.controllerType === null) {
                 if (err) {
                     log.error(
