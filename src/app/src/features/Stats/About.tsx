@@ -60,7 +60,7 @@ const About = () => {
                         If this issue persists, please checkout the release
                         notes on{' '}
                         <a
-                            href="https://github.com/Sienci-Labs/gsender/releases"
+                            href="https://github.com/ToxaToxaToxa/G-PCB/releases"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-500 underline"
@@ -158,7 +158,7 @@ const About = () => {
                     </div>
                     <p>
                         <a
-                            href="https://github.com/Sienci-Labs/gsender/blob/master/LICENSE"
+                            href="https://github.com/ToxaToxaToxa/G-PCB/blob/master/LICENSE"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-500 underline"
@@ -197,7 +197,7 @@ const About = () => {
 
                         <a
                             className="text-sm text-blue-500 underline"
-                            href="https://github.com/Sienci-Labs/gsender"
+                            href="https://github.com/ToxaToxaToxa/G-PCB/releases"
                             target="_blank"
                             rel="noreferrer"
                         >

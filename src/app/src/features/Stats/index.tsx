@@ -93,10 +93,10 @@ export function Stats() {
                         </ExternalLink>
                         <ExternalLink
                             title={'Github'}
-                            link={'https://github.com/Sienci-Labs/gsender'}
+                            link={'https://github.com/ToxaToxaToxa/G-PCB/issues'}
                             icon={<FaGithub />}
                         >
-                            Submit issues or grab the latest version of gSender
+                            Report a problem or grab the latest version of G-PCB
                         </ExternalLink>
                     </div>
                     <AlarmPreview />

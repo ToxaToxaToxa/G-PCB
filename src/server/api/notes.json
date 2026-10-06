@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.4",
+    "date": "October 6, 2026",
+    "notes": [
+      "A window announces new G-PCB versions with their release notes, with Update and Later; it never appears during a job, and updating is blocked until the job ends",
+      "The update page, release notes and GitHub links point to G-PCB instead of gSender"
+    ]
+  },
+  {
     "version": "1.0.3",
     "date": "October 6, 2026",
     "notes": [
@@ -18,15 +26,6 @@
       "A fixed board array that does not fit is cut down to the boards that fit, never placed past the blank",
       "Height map: no invalid X NaN moves in relative (G91) mode after an unreadable arc",
       "No usage statistics consent dialog while the build has no statistics project"
-    ]
-  },
-  {
-    "version": "1.0.1",
-    "date": "September 27, 2026",
-    "notes": [
-      "New G-PCB splash screen and application icon everywhere",
-      "Updates and links point to the renamed ToxaToxaToxa/G-PCB repository",
-      "These notes in the app now describe G-PCB instead of gSender"
     ]
   }
 ]

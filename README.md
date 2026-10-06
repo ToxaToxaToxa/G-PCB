@@ -111,6 +111,10 @@ G-PCB is free software under the [GNU General Public License v3](LICENSE), like 
 <details>
 <summary>Expand to see all version notes</summary>
 
+### 1.0.4 (October 6, 2026)
+- A window announces new G-PCB versions with their release notes, with Update and Later; it never appears during a job, and updating is blocked until the job ends
+- The update page, release notes and GitHub links point to G-PCB instead of gSender
+
 ### 1.0.3 (October 6, 2026)
 - Fixed a crash when an Ethernet (telnet) connection could not reach the machine, for example ENETUNREACH on 192.168.5.1 with no network cable: the error is now shown instead of closing G-PCB
 

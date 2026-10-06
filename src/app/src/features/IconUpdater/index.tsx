@@ -6,6 +6,7 @@ import reduxStore from 'app/store/redux';
 import isElectron from 'is-electron';
 import { updateReleaseNotes } from 'app/store/redux/slices/gSenderInfo.slice.ts';
 import { Link } from 'react-router';
+import UpdateDialog, { UpdateInfo } from './UpdateDialog';
 
 export function UpdateBadge({ hidden }) {
     return (
@@ -24,7 +25,7 @@ export function UpdateBadge({ hidden }) {
 }
 
 export function IconUpdater() {
-    const [releaseNotes, setReleaseNotes] = useState({});
+    const [releaseNotes, setReleaseNotes] = useState<UpdateInfo | null>(null);
     const [showUpdater, setShowUpdater] = useState(false);
 
     useEffect(() => {
@@ -45,8 +46,9 @@ export function IconUpdater() {
 
     return (
         <div className="w-[40px] h-[40px] max-sm:hidden relative z-[10000]">
-            <img alt="gSender Logo" src={gSenderIcon} />
+            <img alt="G-PCB" src={gSenderIcon} />
             <UpdateBadge hidden={showUpdater} />
+            <UpdateDialog info={releaseNotes} />
         </div>
     );
 }

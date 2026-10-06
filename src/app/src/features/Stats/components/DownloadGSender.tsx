@@ -29,30 +29,23 @@ export function DownloadGSender({ version = '1.5.0', downloadPercent = 0 }) {
                 </svg>
                 <span className="sr-only">Info</span>
                 <h3 className="text-lg font-medium">
-                    gSender v{version} available to download!
+                    G-PCB v{version} available to download!
                 </h3>
             </div>
             <div className="mt-2 mb-4 text-sm flex flex-col gap-2">
                 <p>
-                    Clicking the below button will update gSender to version{' '}
-                    {version}.
+                    Clicking the below button will update G-PCB to version{' '}
+                    {version}. Your settings stay as they are.
                 </p>{' '}
-                <p>
-                    It is recommended you backup your EEPROM values and settings
-                    before updating.
-                </p>
                 <p>
                     <a
                         className="text-sm text-blue-500 underline text-center"
-                        href="https://resources.sienci.com/view/gs-installation/#gsender-updates"
+                        href="https://github.com/ToxaToxaToxa/G-PCB/releases"
                         target="_blank"
                         rel="noreferrer"
                     >
                         <div className="flex items-center gap-1 text-center justify-center">
-                            <span>
-                                Read our documentation on updating to learn
-                                more.
-                            </span>
+                            <span>All G-PCB releases</span>
                             <FaExternalLinkAlt />
                         </div>
                     </a>
