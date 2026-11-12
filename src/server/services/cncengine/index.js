@@ -33,6 +33,8 @@ const stop = () => {
     cncengine.stop();
 };
 
+const closeConnection = () => cncengine.closeConnection();
+
 const load = (gcode) => {
     cncengine.load(gcode);
 };
@@ -44,6 +46,7 @@ const unload = () => {
 export default {
     start,
     stop,
+    closeConnection,
     load,
     unload
 };

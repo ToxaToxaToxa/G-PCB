@@ -121,6 +121,23 @@ const main = () => {
         }
     });
 
+    // Close the machine port before quitting: a port left open is torn down
+    // with the Node environment and crashes the app on exit (Sentry G-PCB-4).
+    let serverStarted = false;
+    let portClosed = false;
+    app.on('before-quit', (event) => {
+        if (portClosed || !serverStarted) {
+            return;
+        }
+        event.preventDefault();
+        // required here, like server-cli does, so the server is not loaded before its options
+        const cncengine = require('./server/services/cncengine').default;
+        cncengine.closeConnection().finally(() => {
+            portClosed = true;
+            app.quit();
+        });
+    });
+
     app.on('open-file', (event, filePath) => {
         event.preventDefault();
         const window = windowManager?.getWindow();
@@ -221,6 +238,7 @@ const main = () => {
                 let res;
                 try {
                     res = await launchServer();
+                    serverStarted = true;
                 } catch (error) {
                     const isBindingError = error.errData?.bindingErr ||
                         /EADDR|address not available|address already in use/i.test(error.message);

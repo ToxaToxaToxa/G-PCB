@@ -727,6 +727,29 @@ class CNCEngine {
         config.removeListener('change', this.listener.configChange);
     }
 
+    // Closes the machine port before the app exits. Left open, the port's native
+    // handle is torn down with the Node environment and serialport's binding
+    // throws an unhandled C++ exception on Windows (Sentry G-PCB-4).
+    closeConnection(timeoutMs = 1000) {
+        const serial = this.connection && this.connection.connection;
+        if (!serial || !serial.port) {
+            return Promise.resolve();
+        }
+        return new Promise((resolve) => {
+            const timer = setTimeout(resolve, timeoutMs);
+            try {
+                serial.close(() => {
+                    clearTimeout(timer);
+                    resolve();
+                });
+            } catch (err) {
+                log.error(`Closing the machine port on exit failed: ${err}`);
+                clearTimeout(timer);
+                resolve();
+            }
+        });
+    }
+
     // Emit message across all sockets
     emit(msg, ...args) {
         this.sockets.forEach((socket) => {
