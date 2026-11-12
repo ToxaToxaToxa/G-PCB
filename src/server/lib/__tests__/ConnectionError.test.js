@@ -44,3 +44,55 @@ describe('network connection errors', () => {
         expect(events).toEqual(['ECONNREFUSED']);
     });
 });
+
+describe('closing a network connection', () => {
+    let server;
+    let ethernetPort;
+    const peerClosed = [];
+
+    beforeEach(async () => {
+        server = net.createServer((sock) => {
+            sock.on('close', () => peerClosed.push(true));
+        });
+        await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+        ethernetPort = server.address().port;
+        peerClosed.length = 0;
+    });
+
+    afterEach(() => new Promise((resolve) => server.close(resolve)));
+
+    const openSerial = async (options) => {
+        const serial = new SerialConnection({ path: '127.0.0.1', baudRate: 115200, ethernetPort, ...options });
+        const err = await new Promise((resolve) => serial.open(resolve));
+        expect(err).toBeFalsy();
+        return serial;
+    };
+
+    const waitForPeerClose = async () => {
+        for (let i = 0; i < 50 && !peerClosed.length; i++) {
+            await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+        // let the client socket's own 'close' event run too
+        await new Promise((resolve) => setImmediate(resolve));
+    };
+
+    // Connection.close() calls close() with no callback (Sentry G-PCB-3)
+    it('does not throw without a callback', async () => {
+        const serial = await openSerial({ network: true });
+        const errors = [];
+        const onUncaught = (e) => errors.push(e);
+        process.on('uncaughtException', onUncaught);
+        serial.close();
+        await waitForPeerClose();
+        process.off('uncaughtException', onUncaught);
+        expect(errors).toEqual([]);
+        expect(peerClosed).toEqual([true]);
+    });
+
+    it('closes a socket opened from an IP path without the network flag', async () => {
+        const serial = await openSerial({});
+        await new Promise((resolve) => serial.close(resolve));
+        await waitForPeerClose();
+        expect(peerClosed).toEqual([true]);
+    });
+});

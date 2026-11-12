@@ -276,9 +276,12 @@ class SerialConnection extends EventEmitter {
         this.port.removeListener('error', this.eventListener.error);
         this.parser.removeListener('data', this.eventListener.data);
 
-        if (this.settings.network) {
-            this.port.on('close', () => {
-                callback();
+        // A socket is opened for an IP path even without the network flag, and
+        // Connection.close() calls this without a callback: guard both, or the
+        // socket's 'close' event throws in the main process.
+        if (this.port instanceof net.Socket) {
+            this.port.once('close', () => {
+                callback && callback();
             });
             this.port.destroy();
         } else {
