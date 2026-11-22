@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.13",
+    "date": "November 22, 2026",
+    "notes": [
+      "Test board 50 × 50 mm in samples/test-board-50x50 (also on g-pcb.com) to check the finest trace and clearance your machine can mill",
+      "Height map: no false \"outside the probed area\" warning for the rapid return to X0 Y0 at the end of a program; only cutting moves are checked"
+    ]
+  },
+  {
     "version": "1.0.12",
     "date": "November 22, 2026",
     "notes": [
@@ -14,17 +22,6 @@
     "notes": [
       "WhatsApp support and Donate buttons in Stats → About",
       "Links to GitHub and other sites open in your browser again instead of a bare G-PCB window"
-    ]
-  },
-  {
-    "version": "1.0.10",
-    "date": "November 22, 2026",
-    "notes": [
-      "The machine steps are scenes: a rendered CNC 3018 fills the step and the settings sit on it",
-      "Blank & array: the blank lies on the bed at true scale with your boards on it; its width and height are entered right on the dimension lines",
-      "Work zero: close-ups of the bit over the blank corner (X0 Y0) and of the probe clips (Z0), with the buttons next to them",
-      "Height map: the probe points lie on the copper and take colour as they are probed",
-      "Run: the current program's toolpaths are drawn on the blank, with the program list beside it"
     ]
   }
 ]

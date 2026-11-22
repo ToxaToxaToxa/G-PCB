@@ -59,6 +59,10 @@ Download `G-PCB-<version>-x64.exe` from the [latest release](https://github.com/
 
 G-PCB installs next to gSender, not over it: it has its own application id and keeps its settings in `%APPDATA%\G-PCB`. It checks this repository for updates on start and offers them; nothing is downloaded without asking. *Stats → About → Check for updates* checks on demand.
 
+## Test board
+
+[samples/test-board-50x50](samples/test-board-50x50) is a 50 × 50 mm test board for a first run on a new machine or bit: a trace width row from 0.15 to 1.0 mm, clearance pairs from 0.15 to 0.4 mm, SOIC-8, TSSOP-14 at 0.65 mm pitch, 1206–0402 chip pads, DIP-8, a pin header, arcs, text, a copper pour, vias, mounting holes and a rounded outline. Mill it once and you know the finest trace and gap your machine, bit and depth can do. Download [gpcb-test-50x50.zip](samples/test-board-50x50/gpcb-test-50x50.zip) and load it in the PCB Wizard.
+
 ## Support
 
 - **Questions and problems** — [open an issue](https://github.com/ToxaToxaToxa/G-PCB/issues) or write on [WhatsApp](https://wa.me/380956652468?text=G-PCB%3A%20) (also in *Stats → About*, with your version filled in).
@@ -118,6 +122,10 @@ G-PCB is free software under the [GNU General Public License v3](LICENSE), like 
 
 <details>
 <summary>Expand to see all version notes</summary>
+
+### 1.0.13 (November 22, 2026)
+- Test board 50 × 50 mm in samples/test-board-50x50 (also on g-pcb.com) to check the finest trace and clearance your machine can mill
+- Height map: no false "outside the probed area" warning for the rapid return to X0 Y0 at the end of a program; only cutting moves are checked
 
 ### 1.0.12 (November 22, 2026)
 - Height map: the map is kept when the controller does not report the last touch; once every point is touched and the machine is idle, probing finishes

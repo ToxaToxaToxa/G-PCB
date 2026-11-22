@@ -168,6 +168,13 @@ describe('applyHeightMap', () => {
         expect(stats.pointsOutsideMap).toBeGreaterThan(0);
     });
 
+    it('does not count rapids outside the map', () => {
+        const input = ['G90 G21', 'G0 Z5', 'G0 X5 Y5', 'G1 Z-0.05 F30', 'G1 X15 F120', 'G0 Z5', 'G0 X-50 Y-50'].join('\n');
+        const { stats } = applyHeightMap(input, planeMap);
+        expect(stats.pointsOutsideMap).toBe(0);
+        expect(stats.warnings.join(' ')).not.toMatch(/outside the probed area/);
+    });
+
     it('handles R arcs on the correct side', () => {
         const input = ['G90', 'G0 X0 Y0 Z0', 'G2 X20 Y0 R10'].join('\n');
         const { gcode } = applyHeightMap(input, planeMap);

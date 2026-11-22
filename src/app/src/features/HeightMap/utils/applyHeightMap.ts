@@ -100,8 +100,10 @@ export const applyHeightMap = (
     let minOffset = Infinity;
     let maxOffset = -Infinity;
 
-    const offsetAt = (x: number, y: number) => {
-        if (!isInsideMap(map.grid, x, y, 0.01)) {
+    // Rapids (G0) never cut: the return to X0 Y0 at the end of a program
+    // lies outside the map by design and must not raise the warning
+    const offsetAt = (x: number, y: number, cutting: boolean) => {
+        if (cutting && !isInsideMap(map.grid, x, y, 0.01)) {
             pointsOutsideMap++;
         }
         const offset = interpolateZ(map, x, y) - reference;
@@ -353,7 +355,7 @@ export const applyHeightMap = (
 
         const motionWord = isArc ? 'G1' : `G${motion}`;
         segmentPoints.forEach((p, index) => {
-            const compensated = { ...p, z: p.z + offsetAt(p.x, p.y) };
+            const compensated = { ...p, z: p.z + offsetAt(p.x, p.y, motionWord !== 'G0') };
             const first = index === 0;
             const fullAxes = {
                 x: isArc || motion === 1 || specified.x,

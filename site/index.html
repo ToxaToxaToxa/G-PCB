@@ -156,6 +156,13 @@ section.alt .card { background: var(--bg); }
 .needs ul { margin: 0; padding-left: 20px; color: var(--muted); }
 .needs li { margin: 6px 0; }
 
+/* test board */
+.testboard { padding: 0; grid-template-columns: 1.2fr 1fr; }
+.testboard ul { margin: 0 0 10px; padding-left: 20px; color: var(--muted); }
+.testboard li { margin: 4px 0; }
+.testboard .cta { margin-top: 18px; }
+.testboard .shot { max-width: 460px; justify-self: end; }
+
 /* faq */
 details {
     background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; margin-bottom: 10px;
@@ -178,6 +185,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 18px; justify-content: space
     nav { display: none; }
     .hero .wrap, .step, .steps .step:nth-child(even), .needs { grid-template-columns: 1fr; }
     .steps .step:nth-child(even) .shot { order: 0; }
+    .testboard .shot { justify-self: stretch; max-width: none; }
     .grid3, .renders, .support, .donate { grid-template-columns: 1fr; }
     .support .cta, .donate .cta { justify-content: flex-start; }
     .donate-link { display: none; }
@@ -341,6 +349,29 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 18px; justify-content: space
             <div class="card"><div class="ico">⇄</div><h3><span class="en">Guided bit changes</span><span class="uk">Підказки при зміні фрези</span></h3><p><span class="en">Isolation, drills, holes and outline run in order; you always see which bit to insert next.</span><span class="uk">Ізоляція, свердління, отвори й контур виконуються по черзі; ви завжди бачите, яку фрезу встановити наступною.</span></p></div>
             <div class="card"><div class="ico">!</div><h3><span class="en">Clear stops</span><span class="uk">Зрозумілі зупинки</span></h3><p><span class="en">An alarm or a silent controller stops probing with a plain explanation and the Unlock or Reset button right there.</span><span class="uk">Аварійний стан або контролер, що перестав відповідати, зупиняють вимірювання з поясненням причини й кнопкою Unlock або Reset поруч.</span></p></div>
             <div class="card"><div class="ico">G</div><h3><span class="en">A full CNC sender</span><span class="uk">Повноцінне керування ЧПК</span></h3><p><span class="en">Built on gSender: jogging, console, macros, visualizer and job control are all there when you need them.</span><span class="uk">Побудовано на gSender: ручне переміщення осей, консоль, макроси, візуалізація й керування завданням доступні, коли потрібні.</span></p></div>
+        </div>
+    </div>
+</section>
+
+<section id="test-board" class="alt">
+    <div class="wrap">
+        <div class="step testboard">
+            <div>
+                <h2><span class="en">Test board 50 × 50 mm</span><span class="uk">Тестова плата 50 × 50 мм</span></h2>
+                <p><span class="en">Mill it first on a new machine, bit or blank. It shows the finest trace and the narrowest gap your machine, V-bit and depth can actually cut, before you spend copper on a real board.</span><span class="uk">Виготовте її першою на новому станку, з новою фрезою чи заготовкою. Вона показує, яку найтоншу доріжку й найвужчий зазор реально забезпечують ваш станок, V-подібна фреза й глибина різання, ще до виготовлення робочої плати.</span></p>
+                <ul>
+                    <li><span class="en">Trace widths 0.15–1.0 mm and clearances 0.15–0.4 mm</span><span class="uk">Ширина доріжок 0,15–1,0 мм і зазори 0,15–0,4 мм</span></li>
+                    <li><span class="en">SOIC-8, TSSOP-14 at 0.65 mm pitch, 1206–0402 chip pads</span><span class="uk">SOIC-8, TSSOP-14 із кроком 0,65 мм, контактні майданчики 1206–0402</span></li>
+                    <li><span class="en">DIP-8, pin header, vias 0.4 mm, mounting holes 3.2 mm</span><span class="uk">DIP-8, штирьовий роз'єм, перехідні отвори 0,4 мм, кріпильні отвори 3,2 мм</span></li>
+                    <li><span class="en">Arc traces, text, a copper pour with a thermal pad, a rounded outline</span><span class="uk">Доріжки-дуги, напис, полігон міді з термобар'єром, контур із заокругленими кутами</span></li>
+                </ul>
+                <p><span class="en">The 0.15 mm gap is deliberately narrower than a 60° / 0.1 mm bit cuts: G-PCB warns about it, and it shows where the limit is.</span><span class="uk">Зазор 0,15 мм навмисно вужчий за ширину різу фрези 60° / 0,1 мм: G-PCB попереджає про нього, і саме він показує межу можливостей.</span></p>
+                <div class="cta">
+                    <a class="btn btn-primary" data-umami-event="test-board" href="files/gpcb-test-50x50.zip" download><span class="en">Download Gerber + drill (zip)</span><span class="uk">Завантажити Gerber і свердління (zip)</span></a>
+                    <a class="btn btn-ghost" href="https://github.com/ToxaToxaToxa/G-PCB/tree/master/samples/test-board-50x50"><span class="en">Details on GitHub</span><span class="uk">Докладно на GitHub</span></a>
+                </div>
+            </div>
+            <div class="shot"><img src="img/test-board-50x50.webp" width="694" height="694" alt="Test board 50 x 50 mm, top copper"></div>
         </div>
     </div>
 </section>

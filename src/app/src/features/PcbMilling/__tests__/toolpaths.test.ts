@@ -170,3 +170,26 @@ describe('KiCad sample board', () => {
         }
     });
 });
+
+describe('test board sample (samples/test-board-50x50)', () => {
+    const sdir = path.join(__dirname, '../../../../../../samples/test-board-50x50/gerber');
+    const sproject = parseProject(
+        fs.readdirSync(sdir).map((name) => ({ name, content: fs.readFileSync(path.join(sdir, name), 'utf8') })),
+    );
+
+    it('imports without warnings', () => {
+        expect(sproject.warnings).toEqual([]);
+        const model = buildBoardModel(sproject, 'top');
+        expect(model.warnings).toEqual([]);
+        expect(model.hasOutline).toBe(true);
+        expect(model.width).toBeCloseTo(50, 0);
+        expect(model.height).toBeCloseTo(50, 0);
+        expect(model.holes).toHaveLength(22);
+    });
+
+    it('reports only the intended 0.15 mm gap as too narrow for a 60 deg / 0.1 mm bit', () => {
+        const model = buildBoardModel(sproject, 'top');
+        expect(findUnisolated(model.copper, 0.158)).toHaveLength(1);
+        expect(findUnisolated(model.copper, 0.14)).toHaveLength(0);
+    });
+});
