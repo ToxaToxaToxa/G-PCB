@@ -111,6 +111,9 @@ G-PCB is free software under the [GNU General Public License v3](LICENSE), like 
 <details>
 <summary>Expand to see all version notes</summary>
 
+### 1.0.6 (November 22, 2026)
+- Fixed a crash when closing G-PCB right after the machine was sent commands, for example during height map probing: an aborted write on the closing port no longer closes G-PCB with an error
+
 ### 1.0.5 (November 12, 2026)
 - Fixed a crash when disconnecting from a machine connected over Ethernet (telnet)
 - Fixed a crash when closing G-PCB while connected to a machine: the port is now closed before G-PCB exits

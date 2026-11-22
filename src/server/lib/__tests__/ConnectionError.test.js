@@ -96,3 +96,25 @@ describe('closing a network connection', () => {
         expect(peerClosed).toEqual([true]);
     });
 });
+
+// Closing a COM port aborts writes still in flight, and Windows reports them as
+// an 'error' on the port after our listeners are removed (Sentry G-PCB-5).
+describe('closing a serial port with a write in flight', () => {
+    const { EventEmitter } = require('events');
+
+    it('does not throw when the port reports the aborted write', () => {
+        const serial = new SerialConnection({ path: 'COM99', baudRate: 115200 });
+        const port = new EventEmitter();
+        port.close = (callback) => {
+            port.emit('error', new Error('Writing to COM port (GetOverlappedResult): Operation aborted'));
+            callback && callback();
+        };
+        serial.port = port;
+        serial.parser = new EventEmitter();
+
+        const closed = jest.fn();
+        expect(() => serial.close(closed)).not.toThrow();
+        expect(closed).toHaveBeenCalled();
+        expect(serial.port).toBeNull();
+    });
+});

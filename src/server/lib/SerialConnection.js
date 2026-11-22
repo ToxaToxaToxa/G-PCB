@@ -25,8 +25,11 @@ import { EventEmitter } from 'events';
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';
 import net from 'net';
+import logger from './logger';
 
 // Validation
+
+const log = logger('lib:SerialConnection');
 
 const DATABITS = Object.freeze([5, 6, 7, 8]);
 const STOPBITS = Object.freeze([1, 2]);
@@ -275,6 +278,12 @@ class SerialConnection extends EventEmitter {
         this.port.removeListener('close', this.eventListener.close);
         this.port.removeListener('error', this.eventListener.error);
         this.parser.removeListener('data', this.eventListener.data);
+        // Closing aborts writes still in flight, and the port reports them as
+        // 'error' ("Operation aborted" on Windows). Without a listener that
+        // error throws in the main process (Sentry G-PCB-5).
+        this.port.on('error', (err) => {
+            log.debug(`Error while closing "${this.settings.path}": ${err && err.message}`);
+        });
 
         // A socket is opened for an IP path even without the network flag, and
         // Connection.close() calls this without a callback: guard both, or the

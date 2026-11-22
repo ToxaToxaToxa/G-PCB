@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.6",
+    "date": "November 22, 2026",
+    "notes": [
+      "Fixed a crash when closing G-PCB right after the machine was sent commands, for example during height map probing: an aborted write on the closing port no longer closes G-PCB with an error"
+    ]
+  },
+  {
     "version": "1.0.5",
     "date": "November 12, 2026",
     "notes": [
@@ -13,13 +20,6 @@
     "notes": [
       "A window announces new G-PCB versions with their release notes, with Update and Later; it never appears during a job, and updating is blocked until the job ends",
       "The update page, release notes and GitHub links point to G-PCB instead of gSender"
-    ]
-  },
-  {
-    "version": "1.0.3",
-    "date": "October 6, 2026",
-    "notes": [
-      "Fixed a crash when an Ethernet (telnet) connection could not reach the machine, for example ENETUNREACH on 192.168.5.1 with no network cable: the error is now shown instead of closing G-PCB"
     ]
   }
 ]
