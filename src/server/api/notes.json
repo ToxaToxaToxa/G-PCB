@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.15",
+    "date": "November 22, 2026",
+    "notes": [
+      "PCB Wizard: the project is now really kept after closing G-PCB. In 1.0.14 it was saved in the window's own storage, which the desktop app starts empty every time; it is now a file in the app data folder",
+      "PCB Wizard: on the Run step, *Start* stays locked until the red *I removed the probe clip* button is pressed; it is asked again after every Z0 probing"
+    ]
+  },
+  {
     "version": "1.0.14",
     "date": "November 22, 2026",
     "notes": [
@@ -17,15 +25,6 @@
     "notes": [
       "Test board 50 × 50 mm in samples/test-board-50x50 (also on g-pcb.com) to check the finest trace and clearance your machine can mill",
       "Height map: no false \"outside the probed area\" warning for the rapid return to X0 Y0 at the end of a program; only cutting moves are checked"
-    ]
-  },
-  {
-    "version": "1.0.12",
-    "date": "November 22, 2026",
-    "notes": [
-      "Height map: the map is kept when the controller does not report the last touch; once every point is touched and the machine is idle, probing finishes",
-      "Height map: after Stop or an error the measured points stay on screen, in the wizard too",
-      "Height map: probing is logged (start, ignored reports, why it finished) and a failed run is reported, so problems can be found"
     ]
   }
 ]

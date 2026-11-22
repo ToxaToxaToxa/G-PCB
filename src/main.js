@@ -446,6 +446,10 @@ const main = () => {
                 }
             });
 
+            // The PCB wizard keeps its session in files here: the renderer's
+            // own storage is per origin, and the server port changes every start
+            ipcMain.handle('pcb:user-data-path', () => app.getPath('userData'));
+
             ipcMain.handle('copy-to-clipboard', (_channel, text) => {
                 if (!text) {
                     return { success: false, error: 'No text to copy' };

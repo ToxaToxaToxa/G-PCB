@@ -39,3 +39,58 @@ describe('restoring a project', () => {
         expect(restoreStep(2, false, 4)).toBe(2);
     });
 });
+
+describe('session files in the desktop app', () => {
+    it('saves and loads the session and the machine mark as files in the app data folder', async () => {
+        const files: Record<string, string> = {};
+        const w = window as unknown as Record<string, unknown>;
+        w.ipcRenderer = { invoke: async (channel: string) => (channel === 'pcb:user-data-path' ? 'C:/data' : null) };
+        w.readFileSync = (p: string) => {
+            if (!(p in files)) throw new Error('ENOENT');
+            return files[p];
+        };
+        w.writeFileSync = (p: string, d: string) => {
+            files[p] = d;
+        };
+        w.pathJoin = (...parts: string[]) => parts.join('/');
+
+        let mod: typeof import('../lib/storedSession') | null = null;
+        jest.isolateModules(() => {
+            mod = require('../lib/storedSession');
+        });
+        const m = mod!;
+        expect(await m.loadStoredSession()).toBeNull();
+
+        const stored = {
+            version: 1 as const,
+            savedAt: '2026-11-22T20:00:00Z',
+            step: 6,
+            inputs: [{ name: 'a.gbr', content: 'G04*' }],
+            overrides: {},
+            projectName: 'board',
+            stages: { isolation: true, drill: true, holes: false, outline: true },
+            xySet: true,
+            reference: { x: 1, y: 2 },
+            zeroBit: 'tool:v',
+            heightMapId: 'hm-1',
+            skipHeightMap: false,
+            results: { iso: 'done' as const },
+            opHashes: { iso: 'h' },
+        };
+        await m.saveStoredSession(stored);
+        expect(Object.keys(files)).toEqual(['C:/data/pcb-wizard-session.json']);
+        expect(await m.loadStoredSession()).toEqual(stored);
+
+        m.saveMachineMark(mark);
+        expect(m.loadMachineMark()).toEqual(mark);
+        expect(files['C:/data/pcb-wizard-machine.json']).toBeTruthy();
+
+        await m.clearStoredSession();
+        expect(await m.loadStoredSession()).toBeNull();
+
+        delete w.ipcRenderer;
+        delete w.readFileSync;
+        delete w.writeFileSync;
+        delete w.pathJoin;
+    });
+});

@@ -55,6 +55,8 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
     const probingBit = useRef<string | null>(null);
     const zeroProbe = useZeroProbe(() => updateSession({ zeroBit: probingBit.current, reference: ref }));
     const probing = zeroProbe.status === 'running';
+    // the clip is on while Z0 is probed: Start waits until its removal is confirmed
+    const [clipRemoved, setClipRemoved] = useState(false);
 
     if (!op) {
         return <p className="text-sm text-gray-500">No programs in the plan.</p>;
@@ -125,6 +127,7 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
                                     variant="primary"
                                     onClick={() => {
                                         probingBit.current = key;
+                                        setClipRemoved(false);
                                         zeroProbe.start(probe, ref);
                                     }}
                                     disabled={!idle || running || probing}
@@ -152,7 +155,14 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
                     {!updating && file.name === name && !loaded && !running && (
                         <p className="text-xs text-orange-500">The loaded file is an older version of this program: load it again.</p>
                     )}
-                    <p className="text-xs text-gray-500">Remove the probe clip before starting.</p>
+                    {!running &&
+                        (clipRemoved ? (
+                            <p className="text-xs text-green-600">Probe clip removed.</p>
+                        ) : (
+                            <Button variant="error" className="w-full" onClick={() => setClipRemoved(true)} disabled={probing}>
+                                I removed the probe clip
+                            </Button>
+                        ))}
                     <div className="flex flex-wrap gap-2">
                         <Button onClick={() => onLoad(op, index)} disabled={running || !connected || updating || probing || result === 'skipped'}>
                             {loaded ? 'Loaded' : 'Load'}
@@ -162,7 +172,7 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
                                 <Button
                                     variant="primary"
                                     onClick={start}
-                                    disabled={!idle || !loaded || !zeroOk || needsMap || updating || probing || result === 'skipped'}
+                                    disabled={!idle || !loaded || !zeroOk || !clipRemoved || needsMap || updating || probing || result === 'skipped'}
                                 >
                                     Start
                                 </Button>

@@ -1,8 +1,8 @@
 /*
  * The wizard session on disk, so a project survives closing the app (an
- * update, a crash). The Gerber files can be megabytes, so the session goes to
- * IndexedDB; the last machine position is small and goes to localStorage
- * synchronously, so it is current when the app closes.
+ * update, a crash). In the desktop app both the session and the last machine
+ * position are files in the app data folder; in a plain browser the session
+ * goes to IndexedDB and the machine position to localStorage.
  *
  * Work zero and Z0 are only trusted again when the controller reports the
  * same machine position and work offset as before: a 3018 without limit
@@ -88,16 +88,90 @@ const withStore = async <T>(mode: IDBTransactionMode, run: (store: IDBObjectStor
     });
 };
 
-export const saveStoredSession = (data: StoredSession) => withStore('readwrite', (s) => s.put(data, KEY));
+// ---- files in the app data folder (desktop app) ----
+// The renderer's IndexedDB and localStorage belong to its origin, and the
+// desktop app serves the page on a new port at every start, so there they
+// would be empty after a restart. The preload exposes fs, and main.js tells
+// where the app data folder is.
 
-export const clearStoredSession = () => withStore('readwrite', (s) => s.delete(KEY));
+interface DesktopApi {
+    ipcRenderer?: { invoke: (channel: string, ...args: unknown[]) => Promise<unknown> };
+    readFileSync?: (path: string, encoding: string) => string;
+    writeFileSync?: (path: string, data: string) => void;
+    pathJoin?: (...parts: string[]) => string;
+}
+
+const desktop = (typeof window !== 'undefined' ? (window as unknown as DesktopApi) : {}) as DesktopApi;
+const hasFiles = !!(desktop.ipcRenderer?.invoke && desktop.readFileSync && desktop.writeFileSync && desktop.pathJoin);
+const SESSION_FILE = 'pcb-wizard-session.json';
+const MACHINE_FILE = 'pcb-wizard-machine.json';
+
+let dataDir: string | null = null;
+const dataDirReady: Promise<string | null> = hasFiles
+    ? desktop
+          .ipcRenderer!.invoke('pcb:user-data-path')
+          .then((dir) => {
+              dataDir = typeof dir === 'string' && dir ? dir : null;
+              return dataDir;
+          })
+          .catch(() => null)
+    : Promise.resolve(null);
+
+const filePath = (name: string) => (dataDir ? desktop.pathJoin!(dataDir, name) : null);
+
+const readJson = <T>(name: string): T | null => {
+    const path = filePath(name);
+    if (!path) return null;
+    try {
+        const text = desktop.readFileSync!(path, 'utf8');
+        return text ? (JSON.parse(text) as T) : null;
+    } catch {
+        return null;
+    }
+};
+
+const writeText = (name: string, text: string) => {
+    const path = filePath(name);
+    if (!path) return false;
+    try {
+        desktop.writeFileSync!(path, text);
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+const valid = (data: StoredSession | null) =>
+    data && data.version === 1 && Array.isArray(data.inputs) && data.inputs.length > 0 ? data : null;
+
+export const saveStoredSession = async (data: StoredSession) => {
+    if (hasFiles && (await dataDirReady)) {
+        writeText(SESSION_FILE, JSON.stringify(data));
+        return;
+    }
+    await withStore('readwrite', (s) => s.put(data, KEY));
+};
+
+export const clearStoredSession = async () => {
+    if (hasFiles && (await dataDirReady)) {
+        writeText(SESSION_FILE, '');
+        return;
+    }
+    await withStore('readwrite', (s) => s.delete(KEY));
+};
 
 export const loadStoredSession = async (): Promise<StoredSession | null> => {
-    const data = await withStore<StoredSession>('readonly', (s) => s.get(KEY));
-    return data && data.version === 1 && Array.isArray(data.inputs) && data.inputs.length > 0 ? data : null;
+    if (hasFiles && (await dataDirReady)) {
+        return valid(readJson<StoredSession>(SESSION_FILE));
+    }
+    return valid(await withStore<StoredSession>('readonly', (s) => s.get(KEY)));
 };
 
 export const saveMachineMark = (mark: MachineMark) => {
+    if (hasFiles && dataDir) {
+        writeText(MACHINE_FILE, JSON.stringify(mark));
+        return;
+    }
     try {
         localStorage.setItem(MACHINE_KEY, JSON.stringify(mark));
     } catch {
@@ -106,6 +180,9 @@ export const saveMachineMark = (mark: MachineMark) => {
 };
 
 export const loadMachineMark = (): MachineMark | null => {
+    if (hasFiles && dataDir) {
+        return readJson<MachineMark>(MACHINE_FILE);
+    }
     try {
         const raw = localStorage.getItem(MACHINE_KEY);
         return raw ? (JSON.parse(raw) as MachineMark) : null;

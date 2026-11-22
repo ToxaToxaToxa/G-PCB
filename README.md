@@ -123,6 +123,10 @@ G-PCB is free software under the [GNU General Public License v3](LICENSE), like 
 <details>
 <summary>Expand to see all version notes</summary>
 
+### 1.0.15 (November 22, 2026)
+- PCB Wizard: the project is now really kept after closing G-PCB. In 1.0.14 it was saved in the window's own storage, which the desktop app starts empty every time; it is now a file in the app data folder
+- PCB Wizard: on the Run step, *Start* stays locked until the red *I removed the probe clip* button is pressed; it is asked again after every Z0 probing
+
 ### 1.0.14 (November 22, 2026)
 - Height map: a new map is no longer damaged on save when the previous map had more points per row; such a map was dropped on the next start as "not saved"
 - Height map: maps damaged this way are repaired on load, so they appear again
