@@ -144,11 +144,15 @@ class WindowManager {
             window.webContents.send('maximize-window');
         });
 
-        // Open every external link in a new window
-        // https://github.com/electron/electron/blob/master/docs/api/web-contents.md
-        webContents.on('new-window', (event, url) => {
-            event.preventDefault();
-            shell.openExternal(url);
+        // Open external links (target=_blank, window.open) in the system browser.
+        // The old 'new-window' event is gone since Electron 22, so such links
+        // opened a bare app window instead (GitHub, WhatsApp, the donation page).
+        webContents.setWindowOpenHandler(({ url }) => {
+            if (/^https?:\/\//i.test(url) && !url.startsWith(webContents.getURL().split('#')[0])) {
+                shell.openExternal(url);
+                return { action: 'deny' };
+            }
+            return { action: 'allow' };
         });
 
         if (splashScreen) {

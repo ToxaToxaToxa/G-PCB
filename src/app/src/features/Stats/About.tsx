@@ -134,8 +134,24 @@ const About = () => {
                         <p className="text-sm text-gray-500 dark:text-white">
                             Version {version}
                         </p>
-                        <div className="mt-2">
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
                             <CheckForUpdates />
+                            <a
+                                href={`https://wa.me/380956652468?text=${encodeURIComponent(`G-PCB ${version}: `)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="rounded border border-green-600 px-3 py-1 text-sm font-semibold text-green-700 hover:bg-green-50 dark:text-green-400"
+                            >
+                                WhatsApp support
+                            </a>
+                            <a
+                                href="https://send.monobank.ua/jar/9wXzwVuoo3"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="rounded border border-orange-600 px-3 py-1 text-sm font-semibold text-orange-700 hover:bg-orange-50 dark:text-orange-400"
+                            >
+                                ♥ Donate
+                            </a>
                         </div>
                     </div>
                 </div>

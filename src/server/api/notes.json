@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.11",
+    "date": "November 22, 2026",
+    "notes": [
+      "WhatsApp support and Donate buttons in Stats → About",
+      "Links to GitHub and other sites open in your browser again instead of a bare G-PCB window"
+    ]
+  },
+  {
     "version": "1.0.10",
     "date": "November 22, 2026",
     "notes": [
@@ -15,14 +23,6 @@
     "date": "November 22, 2026",
     "notes": [
       "Rendered pictures of a CNC 3018 on the Blank & array, Work zero, Height map and Run steps show what to do at the machine: the clamped blank, X0 Y0 at the corner, the probe clips for Z0, the height map points and the bit change; a click opens a picture full size"
-    ]
-  },
-  {
-    "version": "1.0.8",
-    "date": "November 22, 2026",
-    "notes": [
-      "Check for updates button in Stats → About: answers \"up to date\" too, and opens the update window at once when a new version is out",
-      "The About page describes G-PCB, with credit to gSender and its team"
     ]
   }
 ]

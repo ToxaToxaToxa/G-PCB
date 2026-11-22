@@ -111,6 +111,10 @@ G-PCB is free software under the [GNU General Public License v3](LICENSE), like 
 <details>
 <summary>Expand to see all version notes</summary>
 
+### 1.0.11 (November 22, 2026)
+- WhatsApp support and Donate buttons in Stats → About
+- Links to GitHub and other sites open in your browser again instead of a bare G-PCB window
+
 ### 1.0.10 (November 22, 2026)
 - The machine steps are scenes: a rendered CNC 3018 fills the step and the settings sit on it
 - Blank & array: the blank lies on the bed at true scale with your boards on it; its width and height are entered right on the dimension lines
