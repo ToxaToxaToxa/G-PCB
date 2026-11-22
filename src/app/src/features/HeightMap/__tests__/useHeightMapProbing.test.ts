@@ -24,6 +24,7 @@ const controllerState = {
     wpos: { x: 0, y: 0, z: 2 },
     settings: { settings: { $13: '0' } },
     modal: { wcs: 'G55' },
+    state: { status: { activeState: 'Run' } },
 };
 
 jest.mock('app/store/redux', () => ({
@@ -48,6 +49,7 @@ beforeEach(() => {
     Object.keys(listeners).forEach((k) => delete listeners[k]);
     commands.length = 0;
     controllerState.settings.settings.$13 = '0';
+    controllerState.state.status.activeState = 'Run';
 });
 
 describe('useHeightMapProbing', () => {
@@ -106,6 +108,61 @@ describe('useHeightMapProbing', () => {
         emit('ALARM:4');
         expect(result.current.status).toBe('failed');
         expect(result.current.message).toContain('ALARM:4');
+        expect(result.current.failure).toEqual({ kind: 'alarm', code: '4' });
+
+        act(() => result.current.start(grid, probe));
+        emit('ALARM:5 (Probe fail)');
+        expect(result.current.failure).toEqual({ kind: 'alarm', code: '5' });
+
+        act(() => result.current.start(grid, probe));
+        emit('error:9');
+        expect(result.current.failure).toEqual({ kind: 'error', code: '9' });
+    });
+
+    describe('when the controller stops answering', () => {
+        // depth 4 mm at 100 and (4 + 0.5) mm at 20 mm/min: 2.4 s + 13.5 s, + 30 s margin
+        const timeout = 45_900;
+
+        beforeEach(() => jest.useFakeTimers());
+        afterEach(() => jest.useRealTimers());
+
+        it('fails after the longest touch plus a margin', () => {
+            const { result } = renderHook(() => useHeightMapProbing(jest.fn()));
+            act(() => result.current.start(grid, probe));
+            act(() => jest.advanceTimersByTime(timeout - 100));
+            expect(result.current.status).toBe('running');
+            act(() => jest.advanceTimersByTime(200));
+            expect(result.current.status).toBe('failed');
+            expect(result.current.failure).toEqual({ kind: 'timeout', seconds: 46 });
+        });
+
+        it('restarts the wait on every probe report', () => {
+            const { result } = renderHook(() => useHeightMapProbing(jest.fn()));
+            act(() => result.current.start(grid, probe));
+            act(() => jest.advanceTimersByTime(timeout - 1000));
+            emit(prb(0, 0, 0.1));
+            act(() => jest.advanceTimersByTime(timeout - 1000));
+            expect(result.current.status).toBe('running');
+        });
+
+        it('waits through a feed hold', () => {
+            const { result } = renderHook(() => useHeightMapProbing(jest.fn()));
+            act(() => result.current.start(grid, probe));
+            controllerState.state.status.activeState = 'Hold:0';
+            act(() => jest.advanceTimersByTime(timeout * 3));
+            expect(result.current.status).toBe('running');
+            controllerState.state.status.activeState = 'Run';
+            act(() => jest.advanceTimersByTime(timeout + 100));
+            expect(result.current.status).toBe('failed');
+        });
+
+        it('does not fire after probing ends', () => {
+            const { result } = renderHook(() => useHeightMapProbing(jest.fn()));
+            act(() => result.current.start(grid, probe));
+            act(() => result.current.stop());
+            act(() => jest.advanceTimersByTime(timeout * 2));
+            expect(result.current.status).toBe('stopped');
+        });
     });
 
     it('stops with a soft reset', () => {

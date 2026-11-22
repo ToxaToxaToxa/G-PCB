@@ -33,6 +33,19 @@ export const touchesPerPoint = (probe: HeightMapProbeConfig) =>
     probe.probeFeedSlow > 0 ? 2 : 1;
 
 /**
+ * Longest wait for the next [PRB] report, in ms: the slowest full-depth
+ * travel of both touches, plus a margin for the moves between points. A
+ * controller that stays silent longer than this has stopped answering.
+ */
+export const probeReportTimeoutMs = (probe: HeightMapProbeConfig) => {
+    const depth = probe.clearanceZ - probe.probeMinZ;
+    const minutes =
+        depth / probe.probeFeed +
+        (probe.probeFeedSlow > 0 ? (depth + probe.retract) / probe.probeFeedSlow : 0);
+    return Math.ceil(minutes * 60_000) + 30_000;
+};
+
+/**
  * Builds the probing program for the grid. All values are in mm and work
  * coordinates, the caller must make sure G21 is active (gcode:safe does it).
  */

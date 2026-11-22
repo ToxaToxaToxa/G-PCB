@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 const uploads: File[] = [];
 const storeData: Record<string, unknown> = {};
@@ -29,6 +29,7 @@ jest.mock('app/features/WidgetConfig/WidgetConfig', () => ({
 }));
 
 import PcbWizard from '../index';
+import { updateSession } from '../lib/session';
 
 const dir = path.join(__dirname, '../../PcbMilling/__tests__/fixtures/power-replay-usbc');
 
@@ -70,4 +71,14 @@ it('walks from Gerber files to a 2 x 2 array of loadable programs', async () => 
     fireEvent.click(screen.getByText('Blank & array'));
     expect(screen.getByRole('heading').textContent).toMatch(/2\. Blank & array/);
     expect(storeData.pcbWizard).toBeTruthy();
+
+    // while Z0 or the height map is probed, the wizard stays on that step
+    const button = (text: string) => screen.getByText(text).closest('button') as HTMLButtonElement;
+    act(() => updateSession({ probing: true }));
+    expect(button('Back').disabled).toBe(true);
+    expect(button('Next').disabled).toBe(true);
+    fireEvent.click(screen.getByText('Tools'));
+    expect(screen.getByRole('heading').textContent).toMatch(/2\. Blank & array/);
+    act(() => updateSession({ probing: false }));
+    expect(button('Next').disabled).toBe(false);
 }, 60000);

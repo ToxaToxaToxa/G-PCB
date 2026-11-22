@@ -4,7 +4,7 @@
  * and a program that ends while the page is closed is still recorded.
  * It lives for the app session; nothing here is written to disk.
  */
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import pubsub from 'pubsub-js';
 
 import controller from 'app/lib/controller';
@@ -40,6 +40,8 @@ export interface WizardSession {
     runningId: string | null;
     /** What the wizard loaded last: a program is startable only while this is its current G-code */
     loaded: { opId: string; hash: string; name: string } | null;
+    /** Z0 or the height map is being probed: the wizard stays on that step */
+    probing: boolean;
 }
 
 const initial: WizardSession = {
@@ -58,6 +60,7 @@ const initial: WizardSession = {
     results: {},
     runningId: null,
     loaded: null,
+    probing: false,
 };
 
 let session = initial;
@@ -68,6 +71,14 @@ export const getSession = () => session;
 export const updateSession = (patch: Partial<WizardSession>) => {
     session = { ...session, ...patch };
     listeners.forEach((l) => l());
+};
+
+/** Keeps the wizard on the current step while `active` (probing) is true. */
+export const useProbingLock = (active: boolean) => {
+    useEffect(() => {
+        updateSession({ probing: active });
+        return () => updateSession({ probing: false });
+    }, [active]);
 };
 
 /** Machine state for a new blank: zero, map and results start over. */

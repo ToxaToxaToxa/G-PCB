@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.0.7",
+    "date": "November 22, 2026",
+    "notes": [
+      "Height map probing stops with a clear message when the controller stops answering, instead of waiting forever",
+      "When probing stops on an alarm, the wizard explains the cause (no contact, probe already closed, limits) and offers Unlock or Reset controller",
+      "The wizard stays on the Work zero or Height map step while probing, so the probe results are not lost"
+    ]
+  },
+  {
     "version": "1.0.6",
     "date": "November 22, 2026",
     "notes": [
@@ -12,14 +21,6 @@
     "notes": [
       "Fixed a crash when disconnecting from a machine connected over Ethernet (telnet)",
       "Fixed a crash when closing G-PCB while connected to a machine: the port is now closed before G-PCB exits"
-    ]
-  },
-  {
-    "version": "1.0.4",
-    "date": "October 6, 2026",
-    "notes": [
-      "A window announces new G-PCB versions with their release notes, with Update and Later; it never appears during a job, and updating is blocked until the job ends",
-      "The update page, release notes and GitHub links point to G-PCB instead of gSender"
     ]
   }
 ]

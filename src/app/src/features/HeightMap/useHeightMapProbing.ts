@@ -11,10 +11,18 @@ import { createEmptyZ, GridPoint } from './utils/heightMap';
 import {
     buildProbeProgram,
     parsePrbLine,
+    probeReportTimeoutMs,
     touchesPerPoint,
 } from './utils/probing';
 
 export type ProbingStatus = 'idle' | 'running' | 'done' | 'failed' | 'stopped';
+
+/** Why probing failed, so the page can say what to do next. */
+export type ProbingFailure =
+    | { kind: 'alarm'; code: string }
+    | { kind: 'error'; code: string }
+    | { kind: 'no-contact' }
+    | { kind: 'timeout'; seconds: number };
 
 interface Session {
     grid: HeightMapGridConfig;
@@ -43,13 +51,20 @@ export const useHeightMapProbing = (
     const [message, setMessage] = useState('');
     const [progress, setProgress] = useState({ done: 0, total: 0 });
     const [liveZ, setLiveZ] = useState<number[][] | null>(null);
+    const [failure, setFailure] = useState<ProbingFailure | null>(null);
 
     const session = useRef<Session | null>(null);
     const listener = useRef<((line: string) => void) | null>(null);
+    const watchdog = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const timeoutMs = useRef(0);
     const onCompleteRef = useRef(onComplete);
     onCompleteRef.current = onComplete;
 
     const detach = useCallback(() => {
+        if (watchdog.current) {
+            clearTimeout(watchdog.current);
+            watchdog.current = null;
+        }
         if (listener.current) {
             controller.removeListener('serialport:read', listener.current);
             listener.current = null;
@@ -59,13 +74,39 @@ export const useHeightMapProbing = (
     useEffect(() => detach, [detach]);
 
     const finish = useCallback(
-        (nextStatus: ProbingStatus, text: string) => {
+        (nextStatus: ProbingStatus, text: string, why: ProbingFailure | null = null) => {
             detach();
+            session.current = null;
             setStatus(nextStatus);
             setMessage(text);
+            setFailure(why);
         },
         [detach],
     );
+
+    // Neither a report nor an alarm for longer than any touch can take: the
+    // controller or its USB link stopped answering. A feed hold only pauses.
+    const arm = useCallback(() => {
+        if (watchdog.current) {
+            clearTimeout(watchdog.current);
+        }
+        watchdog.current = setTimeout(() => {
+            watchdog.current = null;
+            const state = String(
+                reduxStore.getState().controller?.state?.status?.activeState ?? '',
+            );
+            if (state.startsWith('Hold')) {
+                arm();
+                return;
+            }
+            const seconds = Math.round(timeoutMs.current / 1000);
+            finish(
+                'failed',
+                `No answer from the controller for ${seconds} s`,
+                { kind: 'timeout', seconds },
+            );
+        }, timeoutMs.current);
+    }, [finish]);
 
     const handleLine = useCallback(
         (line: string) => {
@@ -74,10 +115,15 @@ export const useHeightMapProbing = (
                 return;
             }
 
-            if (/^ALARM/i.test(line) || /^error:/i.test(line)) {
+            const halted = /^(ALARM|error):\s*(\w+)/i.exec(line);
+            if (halted) {
                 finish(
                     'failed',
                     `Probing stopped by the controller: ${line.trim()}`,
+                    {
+                        kind: halted[1].toUpperCase() === 'ALARM' ? 'alarm' : 'error',
+                        code: halted[2],
+                    },
                 );
                 return;
             }
@@ -90,6 +136,7 @@ export const useHeightMapProbing = (
                 finish(
                     'failed',
                     'The probe did not make contact. Check the probe clip and the probe limit Z.',
+                    { kind: 'no-contact' },
                 );
                 return;
             }
@@ -110,6 +157,7 @@ export const useHeightMapProbing = (
             // The last (slow) touch wins
             current.z[point.row][point.col] = workZ;
             current.hits[index]++;
+            arm();
             setLiveZ(current.z.map((row) => [...row]));
 
             const done = current.hits.filter((h) => h >= current.touches).length;
@@ -125,12 +173,11 @@ export const useHeightMapProbing = (
                     z: current.z.map((row) => [...row]),
                     wcs: current.wcs,
                 };
-                session.current = null;
                 finish('done', 'Probing finished');
                 onCompleteRef.current(map);
             }
         },
-        [finish],
+        [finish, arm],
     );
 
     const start = useCallback(
@@ -162,19 +209,21 @@ export const useHeightMapProbing = (
             setProgress({ done: 0, total: points.length });
             setStatus('running');
             setMessage('Probing...');
+            setFailure(null);
 
             listener.current = handleLine;
             controller.addListener('serialport:read', handleLine);
             controller.command('gcode:safe', commands, 'G21');
+            timeoutMs.current = probeReportTimeoutMs(probe);
+            arm();
         },
-        [detach, handleLine],
+        [detach, handleLine, arm],
     );
 
     const stop = useCallback(() => {
         controller.command('reset');
-        session.current = null;
         finish('stopped', 'Probing stopped (soft reset). Unlock the machine before continuing.');
     }, [finish]);
 
-    return { status, message, progress, liveZ, start, stop };
+    return { status, message, failure, progress, liveZ, start, stop };
 };

@@ -250,7 +250,9 @@ const PcbWizard = () => {
         if (index === 6) return { ...s, status: allDone ? 'done' : anyStopped ? 'attention' : 'todo' };
         return { ...s, status: allDone ? 'done' : 'todo' };
     });
-    const canGo = (index: number) => index >= 0 && index < STEPS.length && steps[index].status !== 'locked';
+    // leaving a step mid-probing would stop listening to the probe while the machine keeps moving
+    const canGo = (index: number) =>
+        !session.probing && index >= 0 && index < STEPS.length && steps[index].status !== 'locked';
 
     const content = () => {
         if (step === 0 || !board || !layout || !panel) {

@@ -1,9 +1,13 @@
 import { useMemo } from 'react';
 
 import { Button } from 'app/components/Button';
+import controller from 'app/lib/controller';
 import { toast } from 'app/lib/toaster';
 import HeightMapPreview from 'app/features/HeightMap/components/HeightMapPreview';
-import { useHeightMapProbing } from 'app/features/HeightMap/useHeightMapProbing';
+import {
+    ProbingFailure,
+    useHeightMapProbing,
+} from 'app/features/HeightMap/useHeightMapProbing';
 import {
     HeightMap,
     HeightMapGridConfig,
@@ -22,7 +26,7 @@ import {
 } from '../../PcbMilling/components/controls';
 import { ProbeSettings } from '../definitions';
 import { heightMapProbeConfig } from '../lib/machine';
-import { updateSession, useSession } from '../lib/session';
+import { updateSession, useProbingLock, useSession } from '../lib/session';
 import MachineStatus, { useMachine } from '../components/MachineStatus';
 import { StepColumns } from '../components/Layout';
 
@@ -33,12 +37,55 @@ interface Props {
     onProbe: (patch: Partial<ProbeSettings>) => void;
 }
 
+/** What went wrong, in the user's terms, and what to do about it. */
+export const describeFailure = (failure: ProbingFailure) => {
+    if (failure.kind === 'timeout') {
+        return `No answer from the controller for ${failure.seconds} s. Check the USB cable and the controller power, then reset the controller.`;
+    }
+    if (failure.kind === 'error') {
+        return `The controller rejected a probing command (error:${failure.code}).`;
+    }
+    const code = failure.kind === 'no-contact' ? '5' : failure.code;
+    switch (code) {
+        case '1':
+            return 'A limit switch was triggered. Home the machine, then set X0 Y0 and Z0 again.';
+        case '2':
+            return 'The probing area or depth is outside the machine travel. Check X0 Y0 and the blank size.';
+        case '3':
+            return 'The machine was reset while moving, so its position may be lost. Home it, then set X0 Y0 and Z0 again.';
+        case '4':
+            return 'The probe circuit was closed before probing started. Check that the bit is clear of the copper and the clip wire is not shorted.';
+        case '5':
+            return 'The probe did not touch the copper before "Probe down to". Check that the clip is on the bit and the wire is on the copper, or probe deeper.';
+        default:
+            return `The controller stopped with ALARM:${code}.`;
+    }
+};
+
+const FailureNotice = ({ failure, alarm }: { failure: ProbingFailure; alarm: boolean }) => (
+    // same frame as the wizard's warnings, with a red edge
+    <div className="flex flex-col gap-2 rounded-md border border-gray-200 dark:border-dark-lighter border-l-4 border-l-red-500 px-3 py-2">
+        <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+            {failure.kind === 'timeout' ? 'Probing stopped: no answer' : 'Probing stopped'}
+        </p>
+        <p className="text-sm text-gray-500 dark:text-gray-300">{describeFailure(failure)}</p>
+        {(alarm || failure.kind === 'timeout') && (
+            <div className="flex gap-2">
+                {failure.kind === 'timeout' && (
+                    <Button onClick={() => controller.command('reset')}>Reset controller</Button>
+                )}
+                {alarm && <Button onClick={() => controller.command('unlock')}>Unlock</Button>}
+            </div>
+        )}
+    </div>
+);
+
 export const findHeightMap = (id: string | null) =>
     id ? (loadHeightMapState().maps.find((m) => m.id === id) ?? null) : null;
 
 const HeightMapStep = ({ grid, projectName, probe, onProbe }: Props) => {
     const session = useSession();
-    const { idle } = useMachine();
+    const { idle, activeState } = useMachine();
     const saved = useMemo(
         () => findHeightMap(session.heightMapId),
         [session.heightMapId],
@@ -60,6 +107,7 @@ const HeightMapStep = ({ grid, projectName, probe, onProbe }: Props) => {
         toast.success('Height map probed');
     });
     const running = probing.status === 'running';
+    useProbingLock(running);
 
     const shownGrid = running || !saved ? grid : saved.grid;
     const shownZ = running ? probing.liveZ : (saved?.z ?? null);
@@ -136,7 +184,13 @@ const HeightMapStep = ({ grid, projectName, probe, onProbe }: Props) => {
                                 Set Z0 in the previous step first.
                             </p>
                         )}
-                        {probing.status !== 'idle' && (
+                        {probing.status === 'failed' && probing.failure && (
+                            <FailureNotice
+                                failure={probing.failure}
+                                alarm={activeState === 'Alarm'}
+                            />
+                        )}
+                        {probing.status !== 'idle' && !probing.failure && (
                             <p
                                 className={
                                     probing.status === 'failed'

@@ -5,7 +5,7 @@ import { Jogging } from 'app/features/Jogging';
 import { Card, Field, FieldGrid } from '../../PcbMilling/components/controls';
 import { ProbeSettings } from '../definitions';
 import { SET_XY_ZERO } from '../lib/machine';
-import { updateSession, useSession } from '../lib/session';
+import { updateSession, useProbingLock, useSession } from '../lib/session';
 import MachineStatus, { useMachine } from '../components/MachineStatus';
 import { StepColumns } from '../components/Layout';
 import { useZeroProbe } from '../useZeroProbe';
@@ -24,6 +24,7 @@ const ZeroStep = ({ probe, reference, firstBit, onProbe }: Props) => {
     const zeroProbe = useZeroProbe(() => updateSession({ zeroBit: firstBit?.key ?? null, reference: session.reference ?? reference }));
     const ref = session.reference ?? reference;
     const busy = zeroProbe.status === 'running';
+    useProbingLock(busy);
 
     const setXY = () => {
         controller.command('gcode', SET_XY_ZERO);
