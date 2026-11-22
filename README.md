@@ -13,12 +13,14 @@
 <p align="center">
   <a href="https://github.com/ToxaToxaToxa/G-PCB/releases/latest"><b>⬇ Download for Windows</b></a>
   ·
+  <a href="https://g-pcb.com">g-pcb.com</a>
+  ·
   <a href="#building">Build from source</a>
   ·
   <a href="#version-notes">What's new</a>
 </p>
 
-![Plan: four boards on one blank, programs for every stage](docs/images/plan.png)
+![Height map step: the probe points on the blank, on a rendered CNC 3018](docs/images/heightmap.webp)
 
 ## Why
 
@@ -26,17 +28,17 @@ Milling a PCB on a hobby CNC usually means juggling several programs: one to tur
 
 ## The PCB wizard
 
-**PCB** sits in the main menu next to Carve. The steps run along the bottom of the screen; any finished step can be opened again.
+**PCB** sits in the main menu next to Carve. The steps run along the bottom of the screen; any finished step can be opened again. The machine steps are drawn as scenes on a rendered CNC 3018: the blank, the probe points and the toolpaths lie on the bed at true scale, and the settings sit next to them.
 
 | | |
 |---|---|
-| **1. Project** — open a zip or the Gerber and drill files from Fusion 360 / EAGLE, KiCad, EasyEDA and others, and check the role of every layer. A frame drawn around the board (EAGLE's default 160 × 100 mm board, for example) is recognised. | ![Project](docs/images/project.png) |
-| **2. Blank & array** — enter the copper clad blank, margins and the gap between boards. G-PCB places as many copies as fit, rotating the board when more fit that way, or the array you ask for. Work zero is the lower-left corner of the blank. | ![Blank and array](docs/images/blank.png) |
-| **3. Tools** — your V-bits with the cut width at the chosen depth, end mills, and the drills you own. | ![Tools](docs/images/tools.png) |
-| **4. Plan** — isolation, drilling, large holes and the board outline with tabs. Choose the order, the bit and the cutting data of every stage; each program covers all boards on the blank. Warnings show places a bit cannot isolate. Programs can be loaded, saved, or downloaded together as a zip. | ![Plan](docs/images/plan.png) |
-| **5. Work zero** — jog to the blank corner and set X0 Y0, then probe Z0 on the copper at a fixed reference point. | ![Work zero](docs/images/zero.png) |
-| **6. Height map** — the probe touches the copper on a grid over the isolation area; the isolation program then follows the real surface of the blank. | |
-| **7. Run** — program by program: G-PCB asks for the next bit, raises Z, probes Z0 again at the same reference point (so the height map stays valid), loads the program and starts it on your click. Programs started from the Carve screen are tracked too. | ![Run](docs/images/run.png) |
+| **1. Project** — open a zip or the Gerber and drill files from Fusion 360 / EAGLE, KiCad, EasyEDA and others, and check the role of every layer. A frame drawn around the board (EAGLE's default 160 × 100 mm board, for example) is recognised. | ![Project](docs/images/project.webp) |
+| **2. Blank & array** — the copper clad blank lies on the machine bed with your boards on it; its width and height are entered right on the dimension lines. G-PCB places as many copies as fit, rotating the board when more fit that way, or the array you ask for. Work zero is the lower-left corner of the blank. | ![Blank and array](docs/images/blank.webp) |
+| **3. Tools** — your V-bits with the cut width at the chosen depth, end mills, and the drills you own. | ![Tools](docs/images/tools.webp) |
+| **4. Plan** — isolation, drilling, large holes and the board outline with tabs. Choose the order, the bit and the cutting data of every stage; each program covers all boards on the blank. Warnings show places a bit cannot isolate. Programs can be loaded, saved, or downloaded together as a zip. | ![Plan](docs/images/plan.webp) |
+| **5. Work zero** — jog the bit to the blank corner and set X0 Y0, then clip the probe to the bit and the copper and probe Z0 at a fixed reference point. Both are shown as close-ups of the machine. | ![Work zero X0 Y0](docs/images/zero-xy.webp) ![Work zero Z0](docs/images/zero-z.webp) |
+| **6. Height map** — the probe touches the copper on a grid over the isolation area; the points take colour as they are probed, and the isolation program then follows the real surface of the blank. If probing stops, the reason (alarm, error, no contact, no answer from the controller) is explained with the button that fixes it. | ![Height map](docs/images/heightmap.webp) |
+| **7. Run** — program by program: G-PCB asks for the next bit, raises Z, probes Z0 again at the same reference point (so the height map stays valid), loads the program and starts it on your click. The toolpaths are drawn on the blank. Programs started from the Carve screen are tracked too. | ![Run](docs/images/run.webp) |
 | **8. Done** — a summary, or the same boards again on a new blank. | |
 
 The machine never moves on its own: every probe, every start is a button you press, and the start stays disabled until the machine is idle and Z0 is set for the bit in the spindle.
@@ -55,7 +57,13 @@ The machine never moves on its own: every probe, every start is a button you pre
 
 Download `G-PCB-<version>-x64.exe` from the [latest release](https://github.com/ToxaToxaToxa/G-PCB/releases/latest) and run it. The installer is not code-signed, so Windows SmartScreen may warn: choose *More info → Run anyway*.
 
-G-PCB installs next to gSender, not over it: it has its own application id and keeps its settings in `%APPDATA%\G-PCB`. It checks this repository for updates on start and offers them; nothing is downloaded without asking.
+G-PCB installs next to gSender, not over it: it has its own application id and keeps its settings in `%APPDATA%\G-PCB`. It checks this repository for updates on start and offers them; nothing is downloaded without asking. *Stats → About → Check for updates* checks on demand.
+
+## Support
+
+- **Questions and problems** — [open an issue](https://github.com/ToxaToxaToxa/G-PCB/issues) or write on [WhatsApp](https://wa.me/380956652468?text=G-PCB%3A%20) (also in *Stats → About*, with your version filled in).
+- **Donate** — G-PCB is free; if it saved you a trip to a board house, you can support it through the [Monobank jar](https://send.monobank.ua/jar/9wXzwVuoo3).
+- **Website** — [g-pcb.com](https://g-pcb.com), in English and Ukrainian.
 
 ## Building
 
@@ -96,7 +104,7 @@ The PCB code lives in `src/app/src/features/PcbWizard`, `PcbMilling` and `Height
 
 ## Privacy
 
-Crash reports go to the G-PCB Sentry project without personal data. Usage statistics are off. Builds made from this repository send nothing unless you put your own keys in `.env` (see `.env.example`).
+Crash reports and failed height map runs go to the G-PCB Sentry project without personal data. Usage statistics are off. Builds made from this repository send nothing unless you put your own keys in `.env` (see `.env.example`).
 
 ## Credits and license
 
