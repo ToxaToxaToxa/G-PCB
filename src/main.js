@@ -417,6 +417,35 @@ const main = () => {
                 }
             });
 
+            // Manual "Check for updates" (Stats → About): the same check as at
+            // start, but answers "up to date" too, and shows the update window
+            // right away instead of after the start-up delay.
+            ipcMain.handle('check-for-updates', async () => {
+                if (process.platform !== 'win32' || !app.isPackaged) {
+                    return { status: 'unsupported' };
+                }
+                autoUpdater.autoDownload = false;
+                let timer = null;
+                try {
+                    const result = await Promise.race([
+                        autoUpdater.checkForUpdates(),
+                        new Promise((_resolve, reject) => {
+                            timer = setTimeout(() => reject(new Error('No answer from GitHub in 15 s')), 15000);
+                        }),
+                    ]);
+                    if (result && result.isUpdateAvailable) {
+                        window.webContents.send('update_available', result.updateInfo);
+                        return { status: 'available', version: result.updateInfo.version };
+                    }
+                    return { status: 'latest', version: app.getVersion() };
+                } catch (err) {
+                    log.error(`Update check failed: ${err}`);
+                    return { status: 'error', message: String((err && err.message) || err) };
+                } finally {
+                    clearTimeout(timer);
+                }
+            });
+
             ipcMain.handle('copy-to-clipboard', (_channel, text) => {
                 if (!text) {
                     return { success: false, error: 'No text to copy' };

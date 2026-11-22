@@ -111,6 +111,10 @@ G-PCB is free software under the [GNU General Public License v3](LICENSE), like 
 <details>
 <summary>Expand to see all version notes</summary>
 
+### 1.0.8 (November 22, 2026)
+- Check for updates button in Stats → About: answers "up to date" too, and opens the update window at once when a new version is out
+- The About page describes G-PCB, with credit to gSender and its team
+
 ### 1.0.7 (November 22, 2026)
 - Height map probing stops with a clear message when the controller stops answering, instead of waiting forever
 - When probing stops on an alarm, the wizard explains the cause (no contact, probe already closed, limits) and offers Unlock or Reset controller

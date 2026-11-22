@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.8",
+    "date": "November 22, 2026",
+    "notes": [
+      "Check for updates button in Stats → About: answers \"up to date\" too, and opens the update window at once when a new version is out",
+      "The About page describes G-PCB, with credit to gSender and its team"
+    ]
+  },
+  {
     "version": "1.0.7",
     "date": "November 22, 2026",
     "notes": [
@@ -13,14 +21,6 @@
     "date": "November 22, 2026",
     "notes": [
       "Fixed a crash when closing G-PCB right after the machine was sent commands, for example during height map probing: an aborted write on the closing port no longer closes G-PCB with an error"
-    ]
-  },
-  {
-    "version": "1.0.5",
-    "date": "November 12, 2026",
-    "notes": [
-      "Fixed a crash when disconnecting from a machine connected over Ethernet (telnet)",
-      "Fixed a crash when closing G-PCB while connected to a machine: the port is now closed before G-PCB exits"
     ]
   }
 ]

@@ -10,6 +10,7 @@ import { cn } from 'app/lib/utils';
 import { RootState } from 'app/store/redux';
 import { useSelector } from 'react-redux';
 import { UpdateGSender } from 'app/features/Stats/components/UpdateGSender.tsx';
+import CheckForUpdates from 'app/features/Stats/components/CheckForUpdates';
 
 const About = () => {
     const { releaseNotes, status, fetchReleaseNotes } = useGetReleaseNotes();
@@ -21,7 +22,8 @@ const About = () => {
         (state: RootState) => state.gSenderInfo.hasUpdate,
     );
 
-    const team = [
+    // G-PCB is built on gSender: credit its team
+    const gSenderTeam = [
         { name: 'Chris T.', title: 'Project Lead' },
         { name: 'Kevin G.', title: 'Lead Dev' },
         { name: 'Walid K.', title: 'Dev Manager' },
@@ -31,14 +33,7 @@ const About = () => {
         { name: 'Kelly Z.', title: 'Icon Design' },
     ];
 
-    const gSenderLogo = new URL(
-        '../../../images/icon-square.png',
-        import.meta.url,
-    );
-    const canadaFlag = new URL(
-        '../../../images/canada-flag-icon.png',
-        import.meta.url,
-    );
+    const logo = new URL('../../../images/g-pcb-square.png', import.meta.url);
 
     const renderReleaseNotes = () => {
         if (status === 'loading') {
@@ -129,34 +124,33 @@ const About = () => {
     return (
         <div className="w-full flex flex-col gap-6 h-full">
             <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                    <img
-                        src={gSenderLogo.href}
-                        alt="gSender Logo"
-                        width={125}
-                        height={125}
-                    />
+                <div className="flex items-center gap-4">
+                    <img src={logo.href} alt="G-PCB logo" width={125} height={125} />
                     <div className="dark:text-white">
-                        <h1 className="text-3xl font-bold">gSender</h1>
+                        <h1 className="text-3xl font-bold">G-PCB</h1>
                         <p className="text-sm text-gray-500 dark:text-white">
-                            By Sienci Labs
+                            By ToxaToxaToxa
                         </p>
                         <p className="text-sm text-gray-500 dark:text-white">
                             Version {version}
                         </p>
+                        <div className="mt-2">
+                            <CheckForUpdates />
+                        </div>
                     </div>
                 </div>
-                <div className="flex flex-col items-end gap-2 text-sm">
-                    <p className=" text-gray-500 dark:text-white">
-                        Copyright © {new Date().getFullYear()} Sienci Labs Inc.
-                    </p>
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500 dark:text-white">
-                            Made in Canada
-                        </span>
-                        <img src={canadaFlag.href} alt="Canada Flag" />
-                    </div>
-                    <p>
+                <div className="flex flex-col items-end gap-2 text-sm text-gray-500 dark:text-white">
+                    <p>Copyright © {new Date().getFullYear()} ToxaToxaToxa</p>
+                    <p>Based on gSender, © Sienci Labs Inc.</p>
+                    <p className="flex gap-3">
+                        <a
+                            href="https://github.com/ToxaToxaToxa/G-PCB"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 underline"
+                        >
+                            GitHub
+                        </a>
                         <a
                             href="https://github.com/ToxaToxaToxa/G-PCB/blob/master/LICENSE"
                             target="_blank"
@@ -170,24 +164,34 @@ const About = () => {
             </div>
 
             <p className="text-md md:text-lg dark:text-white">
-                gSender is a free and feature-packed CNC control software,
-                designed to be clean and easy to learn while retaining a depth
-                of capabilities for advanced users. Many thousands of people
-                trust gSender to control their grbl and grblHAL-based CNCs every
-                day, and they keep coming back for its ease of use, engaged
-                community, and reliability.
+                G-PCB mills printed circuit boards on a GRBL CNC, step by step:
+                Gerber files in, finished boards out. Board arrays, isolation,
+                drilling, the outline with tabs, a probed height map and guided
+                bit changes, all in one place.
             </p>
 
             <div>
-                <h2 className="text-2xl text-blue-500 mb-2">gSender Team</h2>
-                <div className="text-md md:text-lg dark:text-white">
-                    {team.map((member, index) => (
+                <h2 className="text-2xl text-blue-500 mb-2">Built on gSender</h2>
+                <p className="text-md md:text-lg dark:text-white">
+                    G-PCB is a fork of{' '}
+                    <a
+                        href="https://github.com/Sienci-Labs/gsender"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 underline"
+                    >
+                        gSender
+                    </a>
+                    , the free CNC sender by Sienci Labs. Connecting, jogging,
+                    probing and running jobs work as in gSender; G-PCB adds the
+                    PCB section. Thanks to the gSender team:{' '}
+                    {gSenderTeam.map((member, index) => (
                         <span key={member.name}>
                             <strong>{member.name}</strong> ({member.title})
-                            {index < team.length - 1 ? ', ' : ''}
+                            {index < gSenderTeam.length - 1 ? ', ' : '.'}
                         </span>
                     ))}
-                </div>
+                </p>
             </div>
             {hasUpdate && <UpdateGSender notes={updateReleaseNotes} />}
             {!hasUpdate && (
