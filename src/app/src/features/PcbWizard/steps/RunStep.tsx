@@ -6,13 +6,16 @@ import controller from 'app/lib/controller';
 import { Button } from 'app/components/Button';
 import { useTypedSelector } from 'app/hooks/useTypedSelector';
 
-import { Card } from '../../PcbMilling/components/controls';
 import { ProbeSettings, WizardSettings } from '../definitions';
 import { bitKey } from '../lib/machine';
 import { PlannedOperation, programFileName } from '../lib/plan';
 import { Program } from '../lib/programs';
 import { Warnings } from '../components/Layout';
-import Illustration, { PICTURES } from '../components/Illustration';
+import SceneView, { BED_SCENE } from '../scene/SceneView';
+import BlankLayer from '../scene/BlankLayer';
+import ScenePanel from '../scene/ScenePanel';
+import { ZeroMark } from '../scene/BlankOnBed';
+import { BoardModel } from '../../PcbMilling/lib/board';
 import { updateSession, useSession } from '../lib/session';
 import MachineStatus, { useMachine } from '../components/MachineStatus';
 import { useZeroProbe } from '../useZeroProbe';
@@ -28,9 +31,10 @@ interface Props {
     heightMapReady: boolean;
     onLoad: (op: PlannedOperation, index: number) => Promise<boolean>;
     probe: ProbeSettings;
+    panel: BoardModel;
 }
 
-const RunStep = ({ ops, programs, updating, settings, projectName, reference, heightMapReady, onLoad, probe }: Props) => {
+const RunStep = ({ ops, programs, updating, settings, projectName, reference, heightMapReady, onLoad, probe, panel }: Props) => {
     const session = useSession();
     const { idle, connected } = useMachine();
     const file = useTypedSelector((s) => s.file);
@@ -77,12 +81,20 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
     const start = () => controller.command('gcode:start');
 
     return (
-        <div className="grid grid-cols-[minmax(0,30rem)_minmax(0,1fr)] gap-3 min-h-0 flex-1">
-            <div className="flex flex-col gap-2 overflow-y-auto min-h-0 pr-1">
-                <Card>
-                    <MachineStatus />
-                </Card>
-                <Card>
+        <SceneView
+            scene={BED_SCENE}
+            overlay={(mapping) => (
+                <BlankLayer mapping={mapping} width={settings.stock.width} height={settings.stock.height} panel={panel} artwork="faint">
+                    {ops.map((o, i) => (
+                        <Toolpaths key={o.id} op={o} state={i === index ? 'current' : session.results[o.id] === 'done' ? 'done' : 'later'} />
+                    ))}
+                    <ZeroMark />
+                </BlankLayer>
+            )}
+        >
+            <ScenePanel className="w-80">
+                <MachineStatus />
+                <div className="flex flex-col gap-2">
                     <p className="text-sm font-semibold">
                         Program {index + 1} of {ops.length}: {op.name}
                     </p>
@@ -178,12 +190,10 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
                             Mark as done without running
                         </button>
                     )}
-                </Card>
-            </div>
+                </div>
+            </ScenePanel>
 
-            {/* the list takes what it needs; the bit change picture fills the rest */}
-            <div className="flex flex-col gap-2 min-h-0">
-                <Card className="min-h-0 shrink overflow-y-auto">
+            <ScenePanel side="right" className="w-72">
                 <p className="text-sm font-semibold">Programs</p>
                 {ops.map((o, i) => {
                     const result = session.results[o.id];
@@ -217,10 +227,32 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
                         </button>
                     );
                 })}
-                </Card>
-                <Illustration pictures={[PICTURES.run]} />
-            </div>
-        </div>
+            </ScenePanel>
+        </SceneView>
+    );
+};
+
+const PATH_COLORS: Record<string, string> = {
+    isolation: '#1d4ed8',
+    drill: '#111827',
+    holes: '#7c3aed',
+    outline: '#b91c1c',
+};
+
+/** One program's cuts on the copper, in blank millimetres. */
+const Toolpaths = ({ op, state }: { op: PlannedOperation; state: 'current' | 'done' | 'later' }) => {
+    if (state === 'later') return null;
+    const color = state === 'done' ? '#4b5563' : PATH_COLORS[op.kind] ?? '#1d4ed8';
+    const opacity = state === 'done' ? 0.45 : 1;
+    return (
+        <g opacity={opacity}>
+            {op.paths.map((p, i) => (
+                <polyline key={i} points={p.map(([x, y]) => `${x},${y}`).join(' ')} fill="none" stroke={color} strokeWidth={0.3} />
+            ))}
+            {op.points.map(([x, y], i) => (
+                <circle key={`d${i}`} cx={x} cy={y} r={0.45} fill={color} />
+            ))}
+        </g>
     );
 };
 

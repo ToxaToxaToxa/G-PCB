@@ -1,5 +1,6 @@
 function parseLatestReadmeNotes(readme) {
-    let re = /### (\d.\d.\d) \((.*)\)/;
+    // any number of digits per part, so 1.0.10 matches too
+    let re = /### (\d+\.\d+\.\d+) \((.*)\)/;
 
     const notes = readme.split('<summary>Expand to see all version notes</summary>')[1];
     const collectedNotes = [];

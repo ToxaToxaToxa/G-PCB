@@ -1,5 +1,16 @@
 [
   {
+    "version": "1.0.10",
+    "date": "November 22, 2026",
+    "notes": [
+      "The machine steps are scenes: a rendered CNC 3018 fills the step and the settings sit on it",
+      "Blank & array: the blank lies on the bed at true scale with your boards on it; its width and height are entered right on the dimension lines",
+      "Work zero: close-ups of the bit over the blank corner (X0 Y0) and of the probe clips (Z0), with the buttons next to them",
+      "Height map: the probe points lie on the copper and take colour as they are probed",
+      "Run: the current program's toolpaths are drawn on the blank, with the program list beside it"
+    ]
+  },
+  {
     "version": "1.0.9",
     "date": "November 22, 2026",
     "notes": [
@@ -12,15 +23,6 @@
     "notes": [
       "Check for updates button in Stats → About: answers \"up to date\" too, and opens the update window at once when a new version is out",
       "The About page describes G-PCB, with credit to gSender and its team"
-    ]
-  },
-  {
-    "version": "1.0.7",
-    "date": "November 22, 2026",
-    "notes": [
-      "Height map probing stops with a clear message when the controller stops answering, instead of waiting forever",
-      "When probing stops on an alarm, the wizard explains the cause (no contact, probe already closed, limits) and offers Unlock or Reset controller",
-      "The wizard stays on the Work zero or Height map step while probing, so the probe results are not lost"
     ]
   }
 ]

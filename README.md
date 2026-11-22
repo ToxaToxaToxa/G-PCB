@@ -111,6 +111,13 @@ G-PCB is free software under the [GNU General Public License v3](LICENSE), like 
 <details>
 <summary>Expand to see all version notes</summary>
 
+### 1.0.10 (November 22, 2026)
+- The machine steps are scenes: a rendered CNC 3018 fills the step and the settings sit on it
+- Blank & array: the blank lies on the bed at true scale with your boards on it; its width and height are entered right on the dimension lines
+- Work zero: close-ups of the bit over the blank corner (X0 Y0) and of the probe clips (Z0), with the buttons next to them
+- Height map: the probe points lie on the copper and take colour as they are probed
+- Run: the current program's toolpaths are drawn on the blank, with the program list beside it
+
 ### 1.0.9 (November 22, 2026)
 - Rendered pictures of a CNC 3018 on the Blank & array, Work zero, Height map and Run steps show what to do at the machine: the clamped blank, X0 Y0 at the corner, the probe clips for Z0, the height map points and the bit change; a click opens a picture full size
 

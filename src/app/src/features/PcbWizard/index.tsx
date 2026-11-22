@@ -315,7 +315,16 @@ const PcbWizard = () => {
             );
         }
         if (step === 5) {
-            return <HeightMapStep grid={grid} projectName={projectName} probe={settings.probe} onProbe={updateProbe} />;
+            return (
+                <HeightMapStep
+                    grid={grid}
+                    stock={settings.stock}
+                    panel={panel}
+                    projectName={projectName}
+                    probe={settings.probe}
+                    onProbe={updateProbe}
+                />
+            );
         }
         if (step === 6) {
             return (
@@ -329,6 +338,7 @@ const PcbWizard = () => {
                     heightMapReady={!!heightMap}
                     onLoad={loadProgram}
                     probe={settings.probe}
+                    panel={panel}
                 />
             );
         }

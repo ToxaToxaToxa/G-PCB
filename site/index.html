@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>G-PCB — from Gerber to a finished PCB on your desktop CNC</title>
+<meta name="description" content="G-PCB is a free step-by-step wizard for milling printed circuit boards on a GRBL desktop CNC such as the 3018: Gerber files in, finished boards out.">
+<meta property="og:title" content="G-PCB — from Gerber to a finished PCB on your desktop CNC">
+<meta property="og:description" content="A free step-by-step wizard for milling PCBs at home on a GRBL CNC: board arrays, work zero, a probed height map and guided bit changes.">
+<meta property="og:image" content="https://g-pcb.com/img/step-02-blank.webp">
+<meta property="og:url" content="https://g-pcb.com/">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://g-pcb.com/">
+<link rel="icon" href="img/icon.png">
+<style>
+:root {
+    --bg: #f6f5f2;
+    --surface: #ffffff;
+    --ink: #17191c;
+    --muted: #5c636d;
+    --line: #e3e1dc;
+    --copper: #c8693a;
+    --copper-dark: #9c4c24;
+    --green: #1f7a46;
+    --dark: #121417;
+    --radius: 14px;
+    --max: 1160px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.6 "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+}
+img { max-width: 100%; height: auto; display: block; }
+a { color: inherit; }
+html[lang="en"] .uk, html[lang="uk"] .en { display: none !important; }
+
+.wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+
+/* header */
+header {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(246, 245, 242, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+}
+header .wrap { display: flex; align-items: center; gap: 24px; height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; text-decoration: none; }
+.brand img { width: 34px; height: 34px; border-radius: 8px; }
+nav { display: flex; gap: 22px; margin-left: auto; font-size: 15px; }
+nav a { text-decoration: none; color: var(--muted); }
+nav a:hover { color: var(--ink); }
+.lang { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.lang button {
+    border: 0; background: transparent; padding: 6px 12px; font: inherit; font-size: 13px;
+    cursor: pointer; color: var(--muted);
+}
+.lang button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+
+/* buttons */
+.btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 22px; border-radius: 10px; text-decoration: none; font-weight: 600;
+    border: 1px solid transparent; transition: transform .15s ease, box-shadow .15s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { background: var(--copper); color: #fff; box-shadow: 0 6px 18px rgba(200, 105, 58, .35); }
+.btn-primary:hover { background: var(--copper-dark); }
+.btn-ghost { border-color: var(--line); background: var(--surface); }
+.btn small { font-weight: 400; opacity: .85; }
+
+/* hero */
+.hero { padding: 72px 0 40px; }
+.hero .wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: center; }
+.eyebrow { color: var(--copper-dark); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; font-size: 13px; }
+h1 { font-size: clamp(34px, 4.6vw, 54px); line-height: 1.08; margin: 12px 0 18px; letter-spacing: -.02em; }
+.lead { font-size: 19px; color: var(--muted); max-width: 34em; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0 14px; }
+.fine { font-size: 14px; color: var(--muted); }
+.hero-img { position: relative; }
+.hero-img img { filter: drop-shadow(0 30px 40px rgba(0, 0, 0, .18)); }
+
+/* sections */
+section { padding: 72px 0; }
+section.alt { background: var(--surface); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+h2 { font-size: clamp(28px, 3.2vw, 38px); line-height: 1.15; margin: 0 0 14px; letter-spacing: -.01em; }
+.section-lead { color: var(--muted); font-size: 18px; max-width: 46em; margin: 0 0 40px; }
+
+/* steps strip */
+.strip { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px; margin-bottom: 48px; }
+.strip a {
+    display: flex; flex-direction: column; gap: 6px; text-decoration: none;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+    font-size: 14px; font-weight: 600;
+}
+.strip a span { color: var(--copper-dark); font-size: 12px; font-weight: 700; }
+.strip a:hover { border-color: var(--copper); }
+
+/* step rows */
+.step { display: grid; grid-template-columns: 1fr 1.55fr; gap: 40px; align-items: center; padding: 28px 0; }
+.steps .step:nth-child(even) { grid-template-columns: 1.55fr 1fr; }
+.steps .step:nth-child(even) .shot { order: -1; }
+.step h3 { font-size: 24px; margin: 6px 0 10px; }
+.step p { color: var(--muted); margin: 0 0 10px; }
+.step .num {
+    display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center;
+    border-radius: 50%; background: var(--ink); color: #fff; font-weight: 700; font-size: 15px;
+}
+.shot {
+    border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line);
+    box-shadow: 0 18px 40px rgba(20, 22, 26, .12); background: var(--surface);
+}
+.shot.pair { display: grid; grid-template-columns: 1fr; gap: 2px; background: var(--line); }
+
+/* features */
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px;
+}
+section.alt .card { background: var(--bg); }
+.card h3 { margin: 0 0 8px; font-size: 18px; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+.card .ico {
+    width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; margin-bottom: 14px;
+    background: rgba(200, 105, 58, .12); color: var(--copper-dark); font-weight: 800;
+}
+
+/* renders band */
+.band { background: var(--dark); color: #e9e7e3; }
+.band .section-lead { color: #a8adb4; }
+.renders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.renders figure { margin: 0; }
+.renders img { border-radius: 12px; background: #2a2d31; }
+.renders figcaption { color: #a8adb4; font-size: 14px; margin-top: 10px; }
+
+/* needs */
+.needs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.needs ul { margin: 0; padding-left: 20px; color: var(--muted); }
+.needs li { margin: 6px 0; }
+
+/* faq */
+details {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; margin-bottom: 10px;
+}
+details summary { cursor: pointer; font-weight: 600; }
+details p { color: var(--muted); margin: 10px 0 0; }
+
+/* download */
+.download { text-align: center; }
+.download .cta { justify-content: center; }
+
+footer { padding: 36px 0 48px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 18px; justify-content: space-between; }
+
+@media (max-width: 900px) {
+    nav { display: none; }
+    .hero .wrap, .step, .steps .step:nth-child(even), .needs { grid-template-columns: 1fr; }
+    .steps .step:nth-child(even) .shot { order: 0; }
+    .grid3, .renders { grid-template-columns: 1fr; }
+    .strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    header .lang { margin-left: auto; }
+}
+@media (max-width: 560px) {
+    .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cta .btn { width: 100%; justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<header>
+    <div class="wrap">
+        <a class="brand" href="#top"><img src="img/icon.png" alt="">G-PCB</a>
+        <nav>
+            <a href="#how"><span class="en">How it works</span><span class="uk">Як це працює</span></a>
+            <a href="#features"><span class="en">Features</span><span class="uk">Можливості</span></a>
+            <a href="#needs"><span class="en">What you need</span><span class="uk">Що потрібно</span></a>
+            <a href="#faq">FAQ</a>
+            <a href="https://github.com/ToxaToxaToxa/G-PCB">GitHub</a>
+        </nav>
+        <div class="lang" role="group" aria-label="Language">
+            <button type="button" data-lang="en">EN</button>
+            <button type="button" data-lang="uk">UA</button>
+        </div>
+    </div>
+</header>
+
+<main id="top">
+
+<section class="hero">
+    <div class="wrap">
+        <div>
+            <div class="eyebrow"><span class="en">Free · open source · for GRBL desktop CNC</span><span class="uk">Безкоштовно · відкритий код · для настільних ЧПК на GRBL</span></div>
+            <h1>
+                <span class="en">From Gerber files to a finished PCB — at home, in a few clicks</span>
+                <span class="uk">Від Gerber-файлів до готової плати — вдома, в кілька кліків</span>
+            </h1>
+            <p class="lead">
+                <span class="en">G-PCB guides you through milling a printed circuit board on a desktop CNC such as the 3018: open the Gerber zip, place the boards on the blank, set the work zero, probe the copper and run the programs one after another. It tells you which bit goes in next.</span>
+                <span class="uk">G-PCB крок за кроком проводить через фрезерування друкованої плати на настільному ЧПК на кшталт 3018: відкрийте zip-архів Gerber, розмістіть плати на заготовці, встановіть нуль, зніміть карту висот міді й запустіть керуючі програми одну за одною. Програма підкаже, яку фрезу встановити наступною.</span>
+            </p>
+            <div class="cta">
+                <a class="btn btn-primary js-download" href="https://github.com/ToxaToxaToxa/G-PCB/releases/latest">
+                    <span class="en">Download for Windows</span><span class="uk">Завантажити для Windows</span>
+                    <small class="js-version"></small>
+                </a>
+                <a class="btn btn-ghost" href="#how"><span class="en">See how it works</span><span class="uk">Як це працює</span></a>
+            </div>
+            <p class="fine">
+                <span class="en">Windows 10/11 · GPL-3.0 · built on gSender, the free CNC sender by Sienci Labs</span>
+                <span class="uk">Windows 10/11 · GPL-3.0 · побудовано на gSender — вільній програмі керування ЧПК від Sienci Labs</span>
+            </p>
+        </div>
+        <div class="hero-img"><img src="img/hero-3018.webp" alt="CNC 3018 with a copper-clad blank on the bed" width="820" height="683"></div>
+    </div>
+</section>
+
+<section id="how" class="alt">
+    <div class="wrap">
+        <h2><span class="en">Eight steps from Gerber to board</span><span class="uk">Вісім кроків від Gerber до плати</span></h2>
+        <p class="section-lead">
+            <span class="en">The steps run along the bottom of the screen; any finished step can be opened again. At the machine, the wizard shows the scene itself: the blank on the bed, the probe clips, the probing points — with the settings right where they belong.</span>
+            <span class="uk">Кроки розташовані внизу екрана, до будь-якого виконаного кроку можна повернутися. Біля станка майстер показує саму сцену: заготовку на столі, затискачі щупа, точки вимірювання — а налаштування стоять саме там, де вони потрібні.</span>
+        </p>
+        <div class="strip">
+            <a href="#s1"><span>1</span><b class="en">Project</b><b class="uk">Проєкт</b></a>
+            <a href="#s2"><span>2</span><b class="en">Blank &amp; array</b><b class="uk">Заготовка</b></a>
+            <a href="#s3"><span>3</span><b class="en">Tools</b><b class="uk">Інструмент</b></a>
+            <a href="#s4"><span>4</span><b class="en">Plan</b><b class="uk">План</b></a>
+            <a href="#s5"><span>5</span><b class="en">Work zero</b><b class="uk">Нуль</b></a>
+            <a href="#s6"><span>6</span><b class="en">Height map</b><b class="uk">Карта висот</b></a>
+            <a href="#s7"><span>7</span><b class="en">Run</b><b class="uk">Виконання</b></a>
+            <a href="#s7"><span>8</span><b class="en">Done</b><b class="uk">Готово</b></a>
+        </div>
+
+        <div class="steps">
+        <div class="step" id="s1">
+            <div>
+                <span class="num">1</span>
+                <h3><span class="en">Open the Gerber files</span><span class="uk">Відкрийте Gerber-файли</span></h3>
+                <p><span class="en">Drop the zip from KiCad, EasyEDA, EAGLE or JLCPCB. G-PCB finds the copper, outline and drill layers and shows the board. A frame drawn around the board is recognised and ignored.</span><span class="uk">Перетягніть zip-архів із KiCad, EasyEDA, EAGLE чи JLCPCB. G-PCB визначить шари міді, контуру й свердлування та покаже плату. Рамку навколо плати програма розпізнає й не враховує.</span></p>
+            </div>
+            <div class="shot"><img src="img/step-01-project.webp" alt="Project step" loading="lazy" width="1600" height="900"></div>
+        </div>
+
+        <div class="step" id="s2">
+            <div>
+                <span class="num">2</span>
+                <h3><span class="en">Place the boards on the blank</span><span class="uk">Розмістіть плати на заготовці</span></h3>
+                <p><span class="en">Enter the blank size right on its dimension lines. The blank appears on the machine bed at true scale, with as many boards as fit, rotated when that fits more.</span><span class="uk">Введіть розміри заготовки прямо на її розмірних лініях. Заготовка з'являється на столі станка у справжньому масштабі, з максимальною кількістю плат; якщо поворот уміщує більше, плати повертаються.</span></p>
+            </div>
+            <div class="shot"><img src="img/step-02-blank.webp" alt="Blank and array step" loading="lazy" width="1600" height="900"></div>
+        </div>
+
+        <div class="step" id="s3">
+            <div>
+                <span class="num">3</span>
+                <h3><span class="en">Pick the bits</span><span class="uk">Оберіть інструмент</span></h3>
+                <p><span class="en">V-bits for isolation, drills by diameter, an end mill for large holes and the outline. Every program knows its bit and its cut width.</span><span class="uk">V-подібні фрези для ізоляції, свердла за діаметрами, кінцева фреза для великих отворів і контуру. Кожна керуюча програма знає свій інструмент і ширину різу.</span></p>
+            </div>
+            <div class="shot"><img src="img/step-03-tools.webp" alt="Tools step" loading="lazy" width="1600" height="900"></div>
+        </div>
+
+        <div class="step" id="s4">
+            <div>
+                <span class="num">4</span>
+                <h3><span class="en">Check the plan</span><span class="uk">Перевірте план</span></h3>
+                <p><span class="en">Isolation, drilling, large holes and the outline with tabs become separate programs with time estimates. Warnings tell you where copper areas would stay connected with the chosen bit.</span><span class="uk">Ізоляція, свердління, великі отвори й контур із перемичками стають окремими керуючими програмами з оцінкою часу. Попередження показують, де ділянки міді залишаться з'єднаними при обраному інструменті.</span></p>
+            </div>
+            <div class="shot"><img src="img/step-04-plan.webp" alt="Plan step" loading="lazy" width="1600" height="900"></div>
+        </div>
+
+        <div class="step" id="s5">
+            <div>
+                <span class="num">5</span>
+                <h3><span class="en">Set the work zero</span><span class="uk">Встановіть нуль</span></h3>
+                <p><span class="en">Jog the bit over the lower-left corner of the blank and set X0 Y0. Then clip the probe to the bit and to the copper: G-PCB probes Z0 at one point and zeroes every later bit at the same point.</span><span class="uk">Підведіть фрезу до лівого нижнього кута заготовки й встановіть X0 Y0. Далі закріпіть затискачі щупа на фрезі й на міді: G-PCB вимірює Z0 в одній точці й встановлює нуль кожної наступної фрези в тій самій точці.</span></p>
+            </div>
+            <div class="shot pair">
+                <img src="img/step-05-zero-xy.webp" alt="Work zero, X0 Y0" loading="lazy" width="1600" height="900">
+                <img src="img/step-05-zero-z.webp" alt="Work zero, Z0 with probe clips" loading="lazy" width="1600" height="900">
+            </div>
+        </div>
+
+        <div class="step" id="s6">
+            <div>
+                <span class="num">6</span>
+                <h3><span class="en">Probe the height map</span><span class="uk">Зніміть карту висот</span></h3>
+                <p><span class="en">Copper-clad blanks are never flat. The probe touches the copper on a grid over the isolation area, and the isolation program follows the surface — so a 0.05 mm cut stays 0.05 mm across the whole board.</span><span class="uk">Фольгований склотекстоліт ніколи не буває рівним. Щуп торкається міді в точках сітки над зоною ізоляції, і програма ізоляції повторює рельєф поверхні — тож різ глибиною 0,05 мм лишається 0,05 мм по всій платі.</span></p>
+            </div>
+            <div class="shot"><img src="img/step-06-heightmap.webp" alt="Height map step" loading="lazy" width="1600" height="900"></div>
+        </div>
+
+        <div class="step" id="s7">
+            <div>
+                <span class="num">7</span>
+                <h3><span class="en">Run program by program</span><span class="uk">Виконуйте програму за програмою</span></h3>
+                <p><span class="en">The current program's toolpaths are drawn on the blank. Insert the bit it asks for, probe its Z0, load, start. Only the exact program G-PCB generated can be started, and a finished program moves you on to the next.</span><span class="uk">Траєкторії поточної програми показані на заготовці. Встановіть потрібну фрезу, виміряйте її Z0, завантажте й запустіть. Запустити можна лише ту програму, яку згенерував G-PCB, а після завершення майстер переходить до наступної.</span></p>
+            </div>
+            <div class="shot"><img src="img/step-07-run.webp" alt="Run step" loading="lazy" width="1600" height="900"></div>
+        </div>
+        </div>
+    </div>
+</section>
+
+<section id="features">
+    <div class="wrap">
+        <h2><span class="en">Made for milling PCBs at home</span><span class="uk">Створено для фрезерування плат удома</span></h2>
+        <p class="section-lead"><span class="en">Everything the job needs in one place, on the machine you already have.</span><span class="uk">Усе потрібне для роботи в одному місці, на станку, який у вас уже є.</span></p>
+        <div class="grid3">
+            <div class="card"><div class="ico">▦</div><h3><span class="en">Board arrays</span><span class="uk">Групове розміщення плат</span></h3><p><span class="en">As many copies as fit on the blank, or a fixed number of columns and rows, with margin and gap you set.</span><span class="uk">Стільки копій, скільки вміщує заготовка, або задана кількість стовпців і рядів із відступом і проміжком на ваш вибір.</span></p></div>
+            <div class="card"><div class="ico">≋</div><h3><span class="en">Height map</span><span class="uk">Карта висот</span></h3><p><span class="en">The copper surface is probed and the isolation follows it, so thin traces survive on a warped blank.</span><span class="uk">Поверхню міді вимірює щуп, а ізоляція повторює її рельєф, тож тонкі доріжки зберігаються навіть на вигнутій заготовці.</span></p></div>
+            <div class="card"><div class="ico">Z</div><h3><span class="en">Z0 for every bit</span><span class="uk">Z0 для кожної фрези</span></h3><p><span class="en">Each bit is zeroed with the probe clip at the same point of the blank; the wizard knows which bit Z0 was set for.</span><span class="uk">Нуль кожної фрези вимірюється щупом в одній і тій самій точці заготовки; майстер пам'ятає, для якої фрези встановлено Z0.</span></p></div>
+            <div class="card"><div class="ico">⇄</div><h3><span class="en">Guided bit changes</span><span class="uk">Підказки при зміні фрези</span></h3><p><span class="en">Isolation, drills, holes and outline run in order; you always see which bit to insert next.</span><span class="uk">Ізоляція, свердління, отвори й контур виконуються по черзі; ви завжди бачите, яку фрезу встановити наступною.</span></p></div>
+            <div class="card"><div class="ico">!</div><h3><span class="en">Clear stops</span><span class="uk">Зрозумілі зупинки</span></h3><p><span class="en">An alarm or a silent controller stops probing with a plain explanation and the Unlock or Reset button right there.</span><span class="uk">Аварійний стан або контролер, що перестав відповідати, зупиняють вимірювання з поясненням причини й кнопкою Unlock або Reset поруч.</span></p></div>
+            <div class="card"><div class="ico">G</div><h3><span class="en">A full CNC sender</span><span class="uk">Повноцінне керування ЧПК</span></h3><p><span class="en">Built on gSender: jogging, console, macros, visualizer and job control are all there when you need them.</span><span class="uk">Побудовано на gSender: ручне переміщення осей, консоль, макроси, візуалізація й керування завданням доступні, коли потрібні.</span></p></div>
+        </div>
+    </div>
+</section>
+
+<section class="band">
+    <div class="wrap">
+        <h2><span class="en">See it at the machine</span><span class="uk">Усе видно біля станка</span></h2>
+        <p class="section-lead"><span class="en">The scenes are rendered from a CNC 3018 model, so what you see on the screen is what you do with your hands.</span><span class="uk">Сцени відрендерено з моделі ЧПК 3018, тож те, що ви бачите на екрані, ви й робите руками.</span></p>
+        <div class="renders">
+            <figure><img src="img/render-zero-z.webp" width="900" height="579" alt="Probe clips on the bit and the copper"><figcaption><span class="en">Z0: one clip on the bit, one on the copper</span><span class="uk">Z0: один затискач на фрезі, другий на міді</span></figcaption></figure>
+            <figure><img src="img/render-heightmap.webp" width="900" height="579" alt="Height map probing"><figcaption><span class="en">Height map: the probe touches the copper point by point</span><span class="uk">Карта висот: щуп торкається міді точка за точкою</span></figcaption></figure>
+            <figure><img src="img/render-run.webp" width="900" height="579" alt="Bit change between programs"><figcaption><span class="en">Next bit: drills and end mill wait their turn</span><span class="uk">Наступна фреза: свердла й кінцева фреза чекають своєї черги</span></figcaption></figure>
+        </div>
+    </div>
+</section>
+
+<section id="needs" class="alt">
+    <div class="wrap">
+        <h2><span class="en">What you need</span><span class="uk">Що потрібно</span></h2>
+        <div class="needs">
+            <div class="card">
+                <h3><span class="en">Machine and bits</span><span class="uk">Станок та інструмент</span></h3>
+                <ul>
+                    <li><span class="en">A desktop CNC with GRBL or grblHAL firmware — 3018, 3018 Pro / Plus, 4040 and similar</span><span class="uk">Настільний ЧПК із прошивкою GRBL або grblHAL — 3018, 3018 Pro / Plus, 4040 та подібні</span></li>
+                    <li><span class="en">A 20–60° V-bit for isolation (tip 0.1–0.2 mm)</span><span class="uk">V-подібна фреза 20–60° для ізоляції (вершина 0,1–0,2 мм)</span></li>
+                    <li><span class="en">Carbide drills for your hole sizes and a 1 mm end mill for the outline</span><span class="uk">Твердосплавні свердла потрібних діаметрів і кінцева фреза 1 мм для контуру</span></li>
+                    <li><span class="en">A probe: two alligator clips wired to the controller's probe pins</span><span class="uk">Щуп: два затискачі «крокодил», під'єднані до виводів щупа контролера</span></li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3><span class="en">Board and computer</span><span class="uk">Плата й комп'ютер</span></h3>
+                <ul>
+                    <li><span class="en">Single-sided copper-clad blank (FR4 or FR1)</span><span class="uk">Однобічний фольгований склотекстоліт або гетинакс</span></li>
+                    <li><span class="en">Gerber files from any PCB editor, zipped or as separate files</span><span class="uk">Gerber-файли з будь-якого редактора плат, у zip-архіві чи окремими файлами</span></li>
+                    <li><span class="en">A Windows 10/11 PC connected to the machine over USB or Ethernet</span><span class="uk">Комп'ютер із Windows 10/11, під'єднаний до станка через USB або Ethernet</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="faq">
+    <div class="wrap">
+        <h2>FAQ</h2>
+        <details><summary><span class="en">Is G-PCB free?</span><span class="uk">G-PCB безкоштовна?</span></summary><p><span class="en">Yes. It is open source under GPL-3.0, like gSender it is built on.</span><span class="uk">Так. Це відкритий код за ліцензією GPL-3.0, як і gSender, на якому вона побудована.</span></p></details>
+        <details><summary><span class="en">Does it work with my machine?</span><span class="uk">Чи підійде мій станок?</span></summary><p><span class="en">Any machine with GRBL 1.1 or grblHAL that gSender can control. The pictures show a 3018, the most common desktop CNC.</span><span class="uk">Будь-який станок із GRBL 1.1 або grblHAL, яким може керувати gSender. На зображеннях показано 3018 — найпоширеніший настільний ЧПК.</span></p></details>
+        <details><summary><span class="en">Double-sided boards?</span><span class="uk">Двобічні плати?</span></summary><p><span class="en">Single-sided boards today; double-sided boards are planned.</span><span class="uk">Зараз однобічні плати; двобічні заплановано.</span></p></details>
+        <details><summary><span class="en">macOS or Linux?</span><span class="uk">macOS чи Linux?</span></summary><p><span class="en">Windows builds are released now. The code builds on macOS and Linux as well; official builds will follow.</span><span class="uk">Зараз виходять збірки для Windows. Код збирається й на macOS та Linux; офіційні збірки з'являться згодом.</span></p></details>
+        <details><summary><span class="en">How do updates work?</span><span class="uk">Як оновлюватися?</span></summary><p><span class="en">G-PCB checks for a new version at start and in Stats → About. A window shows what changed, and the update never starts during a job.</span><span class="uk">G-PCB перевіряє наявність нової версії під час запуску й у Stats → About. Вікно показує, що змінилося, а оновлення ніколи не запускається під час виконання завдання.</span></p></details>
+        <details><summary><span class="en">Found a problem?</span><span class="uk">Знайшли помилку?</span></summary><p><span class="en">Please <a href="https://github.com/ToxaToxaToxa/G-PCB/issues">open an issue on GitHub</a>.</span><span class="uk">Будь ласка, <a href="https://github.com/ToxaToxaToxa/G-PCB/issues">створіть issue на GitHub</a>.</span></p></details>
+    </div>
+</section>
+
+<section class="alt download">
+    <div class="wrap">
+        <h2><span class="en">Mill your next board at home</span><span class="uk">Виготовте наступну плату вдома</span></h2>
+        <p class="section-lead" style="margin-left:auto;margin-right:auto"><span class="en">Free download for Windows. The installer is not code-signed yet: if SmartScreen warns, choose More info → Run anyway.</span><span class="uk">Безкоштовне завантаження для Windows. Інсталятор поки не має цифрового підпису: якщо SmartScreen попереджає, оберіть «Докладніше» → «Виконати в будь-якому разі».</span></p>
+        <div class="cta">
+            <a class="btn btn-primary js-download" href="https://github.com/ToxaToxaToxa/G-PCB/releases/latest">
+                <span class="en">Download for Windows</span><span class="uk">Завантажити для Windows</span>
+                <small class="js-version"></small>
+            </a>
+            <a class="btn btn-ghost" href="https://github.com/ToxaToxaToxa/G-PCB"><span class="en">Source on GitHub</span><span class="uk">Код на GitHub</span></a>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<footer>
+    <div class="wrap">
+        <span>© <span class="js-year">2026</span> ToxaToxaToxa · GPL-3.0</span>
+        <span><span class="en">Based on</span><span class="uk">Побудовано на</span> <a href="https://github.com/Sienci-Labs/gsender">gSender</a> © Sienci Labs Inc.</span>
+        <span><a href="https://github.com/ToxaToxaToxa/G-PCB/releases">Releases</a> · <a href="https://github.com/ToxaToxaToxa/G-PCB/issues">Issues</a></span>
+    </div>
+</footer>
+
+<script>
+(function () {
+    // language: saved choice, else the browser's, else English
+    var saved = null;
+    try { saved = localStorage.getItem('gpcb-lang'); } catch (e) {}
+    var lang = saved || ((navigator.language || '').toLowerCase().indexOf('uk') === 0 ? 'uk' : 'en');
+    function setLang(l) {
+        document.documentElement.lang = l;
+        document.querySelectorAll('.lang button').forEach(function (b) {
+            b.setAttribute('aria-pressed', String(b.dataset.lang === l));
+        });
+        try { localStorage.setItem('gpcb-lang', l); } catch (e) {}
+    }
+    document.querySelectorAll('.lang button').forEach(function (b) {
+        b.addEventListener('click', function () { setLang(b.dataset.lang); });
+    });
+    setLang(lang);
+    document.querySelectorAll('.js-year').forEach(function (n) { n.textContent = new Date().getFullYear(); });
+
+    // latest release: version on the button and a direct link to the installer
+    fetch('https://api.github.com/repos/ToxaToxaToxa/G-PCB/releases/latest')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (rel) {
+            if (!rel) return;
+            var exe = (rel.assets || []).find(function (a) { return /\.exe$/i.test(a.name); });
+            document.querySelectorAll('.js-version').forEach(function (n) { n.textContent = rel.tag_name; });
+            if (exe) document.querySelectorAll('.js-download').forEach(function (a) { a.href = exe.browser_download_url; });
+        })
+        .catch(function () {});
+})();
+</script>
+</body>
+</html>

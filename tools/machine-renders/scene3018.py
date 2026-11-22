@@ -407,3 +407,113 @@ def scene_run():
 
 SCENES = dict(blank=scene_blank, zero_xy=scene_zero_xy, zero_z=scene_zero_z,
               heightmap=scene_heightmap, run=scene_run)
+
+
+# ---------------------------------------------------------------- full-area scenes (UI drawn on top)
+
+# Points on the bed top in bed millimetres (x from the left edge, y from the front edge),
+# marked for calibration so the page can map bed millimetres onto the picture.
+BED_MARKS = [((20, 15), 'Plastic - Glossy (Red)'), ((280, 15), 'Plastic - Glossy (Green)'),
+             ((280, 165), 'Plastic - Glossy (Blue)'), ((20, 165), 'Plastic - Glossy (Yellow)')]
+
+
+def on_bed(x, y, h=0.0):
+    """Bed top point x mm from the bed's left edge, y mm from its front edge."""
+    return (-150 + x, -90 + y + STATE['bed_dy'], BED_TOP + h)
+
+
+def show_blank(visible):
+    for o in design().rootComponent.occurrences:
+        if o.component.name == 'Bed':
+            for b in o.component.bRepBodies:
+                if b.name in ('FR4 blank', 'Copper') or b.name.startswith('Toe clamp') or b.name.startswith('Clamp '):
+                    b.isLightBulbOn = visible
+
+
+def scene_bed(marks=False):
+    """Empty bed seen from the front, spindle parked back right, for the Blank & array step."""
+    set_position(292, 172, 0)
+    show_blank(False)
+    comp = props()
+    if marks:
+        for (x, y), look_name in BED_MARKS:
+            p = on_bed(x, y, 0)
+            add(comp, cylb(p, (p[0], p[1], p[2] + 0.4), 3.0), 'Mark', look_name)
+    c = on_bed(150, 90, 0)
+    return camera((c[0] + 10, c[1] - 330, c[2] + 270), (c[0] + 8, c[1] + 18, c[2] + 6), 34)
+
+
+def render_calibrated(scene_fn, path_base, width=2200, height=1000, quality=80):
+    """Two renders with one camera: with the bed marks (for calibration) and clean."""
+    cam = scene_fn(marks=True)
+    f1 = render(path_base + '-marks.png', cam, width, height, quality)
+    cam = scene_fn(marks=False)
+    f2 = render(path_base + '.png', cam, width, height, quality)
+    return f1, f2
+
+
+# ---------------------------------------------------------------- calibrated close-ups for Work zero
+
+MARK_LOOKS = ['Plastic - Glossy (Red)', 'Plastic - Glossy (Green)', 'Plastic - Glossy (Blue)', 'Plastic - Glossy (Yellow)']
+
+
+def plane_marks(comp, pts):
+    """Discs on the copper at blank points (u, v), one colour each (red, green, blue, yellow)."""
+    for (u, v), look_name in zip(pts, MARK_LOOKS):
+        p = on_blank(u, v, 0.05)
+        add(comp, cylb(p, (p[0], p[1], p[2] + 0.3), 2.2), 'Mark', look_name)
+
+
+def point_marks(comp, pts):
+    """Small balls at 3D points, one colour each."""
+    for p, look_name in zip(pts, MARK_LOOKS):
+        add(comp, tbm.createSphere(P(*p), 0.25), 'Mark', look_name)
+
+
+# clear of the front toe clamp (x 49..71)
+ZERO_XY_PLANE = [(6, 6), (42, 8), (42, 42), (6, 42)]
+ZERO_Z_PLANE = [(50, 8), (105, 8), (105, 70), (50, 70)]
+
+
+def scene_zero_xy_wide(marks=None):
+    set_position(BLANK['x0'], BLANK['y0'], -45 + 0.6 + 1.0)
+    show_blank(True)
+    comp = props()
+    if marks == 'plane':
+        plane_marks(comp, ZERO_XY_PLANE)
+    c = on_blank(0, 0, 0)
+    return camera((c[0] - 70, c[1] - 200, c[2] + 105), (c[0] + 22, c[1] + 18, c[2] + 14), 30)
+
+
+def scene_zero_z_wide(marks=None):
+    at = (30, 30)
+    set_position(BLANK['x0'] + at[0], BLANK['y0'] + at[1], COPPER_TOP - TIP_Z0)
+    show_blank(True)
+    comp = props()
+    t = tip()
+    d_bit = (-1, -0.35, 0)
+    end1 = clip(comp, (t[0] - 1.6, t[1], t[2] + 13), d_bit, 'Plastic - Glossy (Red)', 'Probe clip (bit)')
+    wire_to(comp, end1, d_bit, PROBE_PINS[0], 'Plastic - Glossy (Red)', 'Probe wire')
+    e = on_blank(12, 6, -0.8)
+    end2 = clip(comp, e, (0, -1, 0), 'Plastic - Matte (Black)', 'Probe clip (copper)')
+    wire_to(comp, end2, (0, -1, 0), PROBE_PINS[1], 'Plastic - Matte (Black)', 'Ground wire', lift=8)
+    if marks == 'plane':
+        plane_marks(comp, ZERO_Z_PLANE)
+    elif marks == 'points':
+        d = V(*d_bit)
+        d.normalize()
+        red_body = (t[0] - 1.6 + d.x * 18, t[1] + d.y * 18, t[2] + 13 + 4)
+        black_body = (e[0], e[1] - 18, e[2] + 4)
+        point_marks(comp, [red_body, black_body, (t[0], t[1], t[2] + 0.3)])
+    return camera((t[0] + 45, t[1] - 205, t[2] + 95), (t[0] - 22, t[1] + 12, t[2] + 10), 30)
+
+
+def render_set(scene_fn, base, variants, width=2200, height=1000):
+    """Clean render (quality 80) and low quality mark renders, all with one camera."""
+    jobs = []
+    for v in variants:
+        cam = scene_fn(marks=v)
+        jobs.append(render(base + '-' + v + '.png', cam, width, height, 30))
+    cam = scene_fn(marks=None)
+    jobs.append(render(base + '.png', cam, width, height, 80))
+    return jobs

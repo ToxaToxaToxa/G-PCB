@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { Button } from 'app/components/Button';
 import controller from 'app/lib/controller';
 import { toast } from 'app/lib/toaster';
-import HeightMapPreview from 'app/features/HeightMap/components/HeightMapPreview';
 import {
     ProbingFailure,
     useHeightMapProbing,
@@ -18,21 +17,21 @@ import {
     saveHeightMapState,
 } from 'app/features/HeightMap/utils/storage';
 
-import {
-    Card,
-    Check,
-    Field,
-    FieldGrid,
-} from '../../PcbMilling/components/controls';
-import { ProbeSettings } from '../definitions';
+import { Check, Field, FieldGrid } from '../../PcbMilling/components/controls';
+import { BoardModel } from '../../PcbMilling/lib/board';
+import { ProbeSettings, StockSettings } from '../definitions';
 import { heightMapProbeConfig } from '../lib/machine';
 import { updateSession, useProbingLock, useSession } from '../lib/session';
 import MachineStatus, { useMachine } from '../components/MachineStatus';
-import { StepColumns } from '../components/Layout';
-import Illustration, { PICTURES } from '../components/Illustration';
+import SceneView, { BED_SCENE } from '../scene/SceneView';
+import BlankLayer from '../scene/BlankLayer';
+import ScenePanel from '../scene/ScenePanel';
+import { ZeroMark } from '../scene/BlankOnBed';
 
 interface Props {
     grid: HeightMapGridConfig | null;
+    stock: StockSettings;
+    panel: BoardModel;
     projectName: string;
     probe: ProbeSettings;
     onProbe: (patch: Partial<ProbeSettings>) => void;
@@ -84,7 +83,7 @@ const FailureNotice = ({ failure, alarm }: { failure: ProbingFailure; alarm: boo
 export const findHeightMap = (id: string | null) =>
     id ? (loadHeightMapState().maps.find((m) => m.id === id) ?? null) : null;
 
-const HeightMapStep = ({ grid, projectName, probe, onProbe }: Props) => {
+const HeightMapStep = ({ grid, stock, panel, projectName, probe, onProbe }: Props) => {
     const session = useSession();
     const { idle, activeState } = useMachine();
     const saved = useMemo(
@@ -116,128 +115,117 @@ const HeightMapStep = ({ grid, projectName, probe, onProbe }: Props) => {
     const canProbe = idle && !running && !!grid && !!session.zeroBit;
 
     return (
-        <StepColumns
-            leftWidth="30rem"
-            left={
-                <>
-                    <Card>
-                        <MachineStatus />
-                    </Card>
-                    <Card>
-                        <p className="text-sm text-gray-500 dark:text-gray-300">
-                            The probe touches the copper on a grid over the
-                            isolation area; the isolation program then follows
-                            the surface. Keep the probe clip on the bit.
-                        </p>
-                        <FieldGrid>
-                            <Field
-                                label="Point spacing"
-                                value={probe.spacing}
-                                step={1}
-                                onChange={(v) => onProbe({ spacing: v })}
-                            />
-                            <Field
-                                label="Height between points"
-                                value={probe.clearance}
-                                step={0.5}
-                                onChange={(v) => onProbe({ clearance: v })}
-                            />
-                            <Field
-                                label="Probe down to"
-                                value={probe.mapDepth}
-                                step={0.5}
-                                onChange={(v) => onProbe({ mapDepth: v })}
-                            />
-                        </FieldGrid>
-                        {grid && (
-                            <p className="text-xs text-gray-500">
-                                {grid.xPoints} × {grid.yPoints} ={' '}
-                                {grid.xPoints * grid.yPoints} points over{' '}
-                                {grid.width.toFixed(1)} ×{' '}
-                                {grid.length.toFixed(1)} mm from X
-                                {grid.xStart.toFixed(1)} Y
-                                {grid.yStart.toFixed(1)}
-                            </p>
-                        )}
-                        <div className="flex gap-2">
-                            {running ? (
-                                <Button variant="error" onClick={probing.stop}>
-                                    Stop
-                                </Button>
-                            ) : (
-                                <Button
-                                    variant="primary"
-                                    disabled={!canProbe}
-                                    onClick={() =>
-                                        grid &&
-                                        probing.start(
-                                            grid,
-                                            heightMapProbeConfig(probe),
-                                        )
-                                    }
-                                >
-                                    {saved ? 'Probe again' : 'Start probing'}
-                                </Button>
-                            )}
-                        </div>
-                        {!session.zeroBit && (
-                            <p className="text-xs text-gray-500">
-                                Set Z0 in the previous step first.
-                            </p>
-                        )}
-                        {probing.status === 'failed' && probing.failure && (
-                            <FailureNotice
-                                failure={probing.failure}
-                                alarm={activeState === 'Alarm'}
-                            />
-                        )}
-                        {probing.status !== 'idle' && !probing.failure && (
-                            <p
-                                className={
-                                    probing.status === 'failed'
-                                        ? 'text-xs text-red-500'
-                                        : 'text-xs text-gray-500'
-                                }
-                            >
-                                {probing.message}
-                                {running &&
-                                    ` ${probing.progress.done} / ${probing.progress.total}`}
-                            </p>
-                        )}
-                        {saved && stats && !running && (
-                            <p className="text-sm text-green-600">
-                                Map ready: the copper is{' '}
-                                {((stats.max - stats.min) * 1000).toFixed(0)} µm
-                                from lowest to highest point.
-                            </p>
-                        )}
-                    </Card>
-                    <Card>
-                        <Check
-                            label="Flat blank: skip the height map"
-                            checked={session.skipHeightMap}
-                            onChange={(v) =>
-                                updateSession({ skipHeightMap: v })
-                            }
-                        />
-                    </Card>
-                    <Illustration pictures={[PICTURES.heightMap]} />
-                </>
-            }
-            right={
-                <Card className="flex-1 min-h-0 items-center justify-center">
-                    {shownGrid ? (
-                        <div className="w-full max-w-xl">
-                            <HeightMapPreview grid={shownGrid} z={shownZ} />
-                        </div>
+        <SceneView
+            scene={BED_SCENE}
+            overlay={(mapping) => (
+                <BlankLayer mapping={mapping} width={stock.width} height={stock.height} panel={panel} artwork="faint">
+                    {shownGrid && <ProbePoints grid={shownGrid} z={shownZ} />}
+                    <ZeroMark />
+                </BlankLayer>
+            )}
+        >
+            <ScenePanel className="w-80">
+                <MachineStatus />
+                <p className="text-sm text-gray-500 dark:text-gray-300">
+                    The probe touches the copper on a grid over the isolation area; the isolation program then follows
+                    the surface. Keep the probe clip on the bit.
+                </p>
+                <FieldGrid cols={2}>
+                    <Field label="Point spacing" value={probe.spacing} step={1} onChange={(v) => onProbe({ spacing: v })} />
+                    <Field label="Height between points" value={probe.clearance} step={0.5} onChange={(v) => onProbe({ clearance: v })} />
+                    <Field label="Probe down to" value={probe.mapDepth} step={0.5} onChange={(v) => onProbe({ mapDepth: v })} />
+                </FieldGrid>
+                {grid && (
+                    <p className="text-xs text-gray-500">
+                        {grid.xPoints} × {grid.yPoints} = {grid.xPoints * grid.yPoints} points over {grid.width.toFixed(1)} ×{' '}
+                        {grid.length.toFixed(1)} mm from X{grid.xStart.toFixed(1)} Y{grid.yStart.toFixed(1)}
+                    </p>
+                )}
+                {!grid && <p className="text-xs text-gray-500">No isolation program in the plan.</p>}
+                <div className="flex gap-2">
+                    {running ? (
+                        <Button variant="error" onClick={probing.stop}>
+                            Stop
+                        </Button>
                     ) : (
-                        <p className="text-sm text-gray-500">
-                            No isolation program in the plan.
-                        </p>
+                        <Button
+                            variant="primary"
+                            disabled={!canProbe}
+                            onClick={() => grid && probing.start(grid, heightMapProbeConfig(probe))}
+                        >
+                            {saved ? 'Probe again' : 'Start probing'}
+                        </Button>
                     )}
-                </Card>
-            }
-        />
+                </div>
+                {!session.zeroBit && <p className="text-xs text-gray-500">Set Z0 in the previous step first.</p>}
+                {probing.status === 'failed' && probing.failure && (
+                    <FailureNotice failure={probing.failure} alarm={activeState === 'Alarm'} />
+                )}
+                {probing.status !== 'idle' && !probing.failure && (
+                    <p className={probing.status === 'failed' ? 'text-xs text-red-500' : 'text-xs text-gray-500'}>
+                        {probing.message}
+                        {running && ` ${probing.progress.done} / ${probing.progress.total}`}
+                    </p>
+                )}
+                {saved && stats && !running && (
+                    <p className="text-sm text-green-600">
+                        Map ready: the copper is {((stats.max - stats.min) * 1000).toFixed(0)} µm from lowest to highest point.
+                    </p>
+                )}
+                <Check
+                    label="Flat blank: skip the height map"
+                    checked={session.skipHeightMap}
+                    onChange={(v) => updateSession({ skipHeightMap: v })}
+                />
+            </ScenePanel>
+        </SceneView>
+    );
+};
+
+/**
+ * Probe points on the copper, in blank millimetres: white until probed, then
+ * coloured from blue (lowest) to red (highest).
+ */
+const ProbePoints = ({ grid, z }: { grid: HeightMapGridConfig; z: number[][] | null }) => {
+    const values = (z ?? []).flat().filter((v) => Number.isFinite(v));
+    const lo = Math.min(...values);
+    const hi = Math.max(...values);
+    const color = (v: number) => {
+        if (!Number.isFinite(v)) return '#ffffff';
+        const t = hi > lo ? (v - lo) / (hi - lo) : 0.5;
+        return `hsl(${Math.round(220 - 220 * t)} 80% 50%)`;
+    };
+    const dx = grid.xPoints > 1 ? grid.width / (grid.xPoints - 1) : 0;
+    const dy = grid.yPoints > 1 ? grid.length / (grid.yPoints - 1) : 0;
+    const r = Math.max(0.8, Math.min(2, Math.min(dx || 4, dy || 4) / 5));
+    return (
+        <g>
+            <rect
+                x={grid.xStart}
+                y={grid.yStart}
+                width={grid.width}
+                height={grid.length}
+                fill="none"
+                stroke="#fff"
+                strokeOpacity={0.8}
+                strokeWidth={0.35}
+                strokeDasharray="1.5 1"
+            />
+            {Array.from({ length: grid.yPoints }, (_, row) =>
+                Array.from({ length: grid.xPoints }, (_, col) => (
+                    <circle
+                        key={`${row}-${col}`}
+                        cx={grid.xStart + col * dx}
+                        cy={grid.yStart + row * dy}
+                        r={r}
+                        fill={color(z?.[row]?.[col] ?? NaN)}
+                        stroke="#111827"
+                        strokeOpacity={0.6}
+                        strokeWidth={0.25}
+                    />
+                )),
+            )}
+        </g>
     );
 };
 

@@ -13,7 +13,7 @@ interface Props {
 
 const PAD = 4; // mm around the board
 
-const pathData = (paths: Paths) =>
+export const pathData = (paths: Paths) =>
     paths
         .map((p) => 'M' + p.map(toMm).map(([x, y]) => `${x.toFixed(3)},${(-y).toFixed(3)}`).join('L') + 'Z')
         .join('');
