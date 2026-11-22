@@ -6,10 +6,14 @@ import { Button } from 'app/components/Button';
 import { BoardSide, LayerKind } from '../../PcbMilling/definitions';
 import { BoardModel, ParsedProject } from '../../PcbMilling/lib/board';
 import PcbPreview from '../../PcbMilling/components/PcbPreview';
-import { Card, LAYER_OPTIONS, Select } from '../../PcbMilling/components/controls';
+import { Card, Check, LAYER_OPTIONS, Select } from '../../PcbMilling/components/controls';
 import { StepColumns, Warnings } from '../components/Layout';
 
 interface Props {
+    /** Offer to continue the last project, when there is one */
+    restore?: React.ReactNode;
+    keepProject: boolean;
+    onKeepProject: (keep: boolean) => void;
     project: ParsedProject | null;
     board: BoardModel | null;
     side: BoardSide;
@@ -19,7 +23,7 @@ interface Props {
     onSide: (side: BoardSide) => void;
 }
 
-const ProjectStep = ({ project, board, side, busy, onFiles, onLayer, onSide }: Props) => {
+const ProjectStep = ({ restore, keepProject, onKeepProject, project, board, side, busy, onFiles, onLayer, onSide }: Props) => {
     const fileRef = useRef<HTMLInputElement>(null);
     const warnings = [...(project?.warnings ?? []), ...(board?.warnings ?? [])];
 
@@ -27,6 +31,7 @@ const ProjectStep = ({ project, board, side, busy, onFiles, onLayer, onSide }: P
         <StepColumns
             left={
                 <>
+                    {restore}
                     <Card>
                         <div className="flex items-center gap-3">
                             <p className="text-sm text-gray-500 dark:text-gray-300 flex-1">
@@ -36,6 +41,7 @@ const ProjectStep = ({ project, board, side, busy, onFiles, onLayer, onSide }: P
                                 {project ? 'Open other files' : 'Open files / zip'}
                             </Button>
                         </div>
+                        <Check label="Keep the project after closing G-PCB" checked={keepProject} onChange={onKeepProject} />
                         <input
                             ref={fileRef}
                             type="file"

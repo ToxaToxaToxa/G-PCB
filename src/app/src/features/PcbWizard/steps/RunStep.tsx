@@ -16,7 +16,7 @@ import BlankLayer from '../scene/BlankLayer';
 import ScenePanel from '../scene/ScenePanel';
 import { ZeroMark } from '../scene/BlankOnBed';
 import { BoardModel } from '../../PcbMilling/lib/board';
-import { updateSession, useSession } from '../lib/session';
+import { isFinished, updateSession, useSession } from '../lib/session';
 import MachineStatus, { useMachine } from '../components/MachineStatus';
 import { useZeroProbe } from '../useZeroProbe';
 
@@ -40,7 +40,7 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
     const file = useTypedSelector((s) => s.file);
     const workflowState = useTypedSelector((s) => s.controller.workflow.state);
 
-    const firstOpen = ops.findIndex((op) => session.results[op.id] !== 'done');
+    const firstOpen = ops.findIndex((op) => !isFinished(session.results[op.id]));
     const [current, setCurrent] = useState(Math.max(firstOpen, 0));
     // move on to the next program when one finishes
     useEffect(() => {
@@ -79,6 +79,13 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
     // the session marks the program as running when the job starts (see onJobStart),
     // so a start from the Carve screen is tracked the same way
     const start = () => controller.command('gcode:start');
+    const result = session.results[op.id];
+    const setResult = (value: 'done' | 'skipped' | null) => {
+        const results = { ...session.results };
+        if (value) results[op.id] = value;
+        else delete results[op.id];
+        updateSession({ results });
+    };
 
     return (
         <SceneView
@@ -147,13 +154,24 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
                     )}
                     <p className="text-xs text-gray-500">Remove the probe clip before starting.</p>
                     <div className="flex flex-wrap gap-2">
-                        <Button onClick={() => onLoad(op, index)} disabled={running || !connected || updating || probing}>
+                        <Button onClick={() => onLoad(op, index)} disabled={running || !connected || updating || probing || result === 'skipped'}>
                             {loaded ? 'Loaded' : 'Load'}
                         </Button>
                         {!running ? (
-                            <Button variant="primary" onClick={start} disabled={!idle || !loaded || !zeroOk || needsMap || updating || probing}>
-                                Start
-                            </Button>
+                            <>
+                                <Button
+                                    variant="primary"
+                                    onClick={start}
+                                    disabled={!idle || !loaded || !zeroOk || needsMap || updating || probing || result === 'skipped'}
+                                >
+                                    Start
+                                </Button>
+                                {result !== 'skipped' && result !== 'done' && (
+                                    <Button onClick={() => setResult('skipped')} disabled={probing}>
+                                        Skip
+                                    </Button>
+                                )}
+                            </>
                         ) : (
                             <>
                                 {workflowState === WORKFLOW_STATE_PAUSED ? (
@@ -180,13 +198,17 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
                             )}
                         </p>
                     )}
-                    {session.results[op.id] === 'stopped' && <p className="text-xs text-orange-500">This program was stopped before the end.</p>}
-                    {!running && session.results[op.id] !== 'done' && (
-                        <button
-                            type="button"
-                            className="self-start text-xs text-gray-500 underline"
-                            onClick={() => updateSession({ results: { ...session.results, [op.id]: 'done' } })}
-                        >
+                    {result === 'stopped' && <p className="text-xs text-orange-500">This program was stopped before the end.</p>}
+                    {result === 'skipped' && (
+                        <p className="text-sm text-gray-500">
+                            Skipped: this program will not run.{' '}
+                            <button type="button" className="text-xs underline" onClick={() => setResult(null)}>
+                                Run it after all
+                            </button>
+                        </p>
+                    )}
+                    {!running && !isFinished(result) && (
+                        <button type="button" className="self-start text-xs text-gray-500 underline" onClick={() => setResult('done')}>
                             Mark as done without running
                         </button>
                     )}
@@ -196,7 +218,7 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
             <ScenePanel side="right" className="w-72">
                 <p className="text-sm font-semibold">Programs</p>
                 {ops.map((o, i) => {
-                    const result = session.results[o.id];
+                    const state = session.results[o.id];
                     const isRunning = session.runningId === o.id;
                     return (
                         <button
@@ -216,13 +238,14 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
                             </span>
                             <span
                                 className={cx('text-xs', {
-                                    'text-green-600': result === 'done',
-                                    'text-orange-500': result === 'stopped',
+                                    'text-green-600': state === 'done',
+                                    'text-orange-500': state === 'stopped',
                                     'text-blue-600': isRunning,
-                                    'text-gray-400': !result && !isRunning,
+                                    'text-gray-400 italic': state === 'skipped',
+                                    'text-gray-400': !state && !isRunning,
                                 })}
                             >
-                                {isRunning ? 'running' : result === 'done' ? 'done' : result === 'stopped' ? 'stopped' : 'to do'}
+                                {isRunning ? 'running' : state ?? 'to do'}
                             </span>
                         </button>
                     );

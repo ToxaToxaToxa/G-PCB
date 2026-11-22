@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import cx from 'classnames';
-import { LuArrowDown, LuArrowUp, LuChevronDown, LuChevronRight } from 'react-icons/lu';
+import { LuArrowDown, LuArrowUp, LuCheck, LuChevronDown, LuChevronRight } from 'react-icons/lu';
 
 import { Button } from 'app/components/Button';
 
@@ -198,10 +198,45 @@ const PlanStep = ({
     );
 
     const totalMinutes = ops.reduce((s, op) => s + op.stats.estimatedMinutes, 0);
+    const chosen = settings.order.filter((stage) => settings[stage].enabled);
 
     return (
         <div className="grid grid-cols-[minmax(0,30rem)_minmax(0,1fr)] gap-3 min-h-0 flex-1">
             <div className="flex flex-col gap-2 min-h-0 overflow-y-auto pr-1">
+                <Card className="gap-2 py-2">
+                    <p className="text-sm font-semibold">What to make</p>
+                    <div className="grid grid-cols-2 gap-2">
+                        {settings.order.map((stage) => {
+                            const on = settings[stage].enabled;
+                            return (
+                                <button
+                                    key={stage}
+                                    type="button"
+                                    aria-pressed={on}
+                                    onClick={() => onStage(stage, { enabled: !on })}
+                                    className={cx(
+                                        'h-9 rounded-md border text-sm font-medium flex items-center justify-center gap-1.5 transition-colors',
+                                        on
+                                            ? 'border-blue-500 bg-blue-500 text-white hover:bg-blue-600'
+                                            : 'border-gray-300 dark:border-dark-lighter text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-lighter',
+                                    )}
+                                >
+                                    {on ? <LuCheck className="shrink-0" /> : <span className="w-[1em] shrink-0" />}
+                                    {STAGE_TITLES[stage]}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    {chosen.length === 0 ? (
+                        <p className="text-xs text-orange-500">Nothing is selected: choose at least one operation.</p>
+                    ) : (
+                        <p className="text-xs text-gray-500">
+                            {busy
+                                ? `${chosen.map((k) => STAGE_TITLES[k]).join(', ')} · updating the programs…`
+                                : `${ops.length} program${ops.length === 1 ? '' : 's'}: ${chosen.map((k) => STAGE_TITLES[k].toLowerCase()).join(', ')} · ~${Math.max(1, Math.round(totalMinutes))} min`}
+                        </p>
+                    )}
+                </Card>
                 <Card className="gap-1.5 py-2">
                     {header('common', 'Board and heights')}
                     {open === 'common' && fields('common')}
@@ -212,17 +247,7 @@ const PlanStep = ({
                         <Card key={stage} className={cx('gap-1.5 py-2', { 'opacity-70': !enabled })}>
                             <div className="flex items-center gap-1">
                                 <div className="flex-1 min-w-0">
-                                    {header(
-                                        stage,
-                                        `${index + 1}. ${STAGE_TITLES[stage]}`,
-                                        <input
-                                            type="checkbox"
-                                            aria-label={`Run ${STAGE_TITLES[stage]}`}
-                                            checked={enabled}
-                                            onChange={(e) => onStage(stage, { enabled: e.target.checked })}
-                                        />,
-                                        enabled,
-                                    )}
+                                    {header(stage, `${index + 1}. ${STAGE_TITLES[stage]}`, undefined, enabled)}
                                 </div>
                                 <Button size="icon" variant="ghost" className={cx({ invisible: index === 0 })} onClick={() => move(index, -1)} aria-label={`Move ${STAGE_TITLES[stage]} up`}>
                                     <LuArrowUp />

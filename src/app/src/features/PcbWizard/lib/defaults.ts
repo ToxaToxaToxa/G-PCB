@@ -66,6 +66,7 @@ export const DEFAULT_WIZARD_SETTINGS: WizardSettings = {
     safeZ: 5,
     dwell: 2,
     applyHeightMap: true,
+    keepProject: true,
     probe: {
         travel: 25,
         feed: 100,

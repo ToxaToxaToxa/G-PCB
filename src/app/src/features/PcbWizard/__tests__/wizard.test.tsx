@@ -25,6 +25,9 @@ jest.mock('app/features/WidgetConfig/WidgetConfig', () => ({
         set(_key: string, value: unknown) {
             storeData[this.id] = value;
         }
+        replace(_key: string, value: unknown) {
+            storeData[this.id] = value;
+        }
     },
 }));
 

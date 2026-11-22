@@ -123,6 +123,14 @@ G-PCB is free software under the [GNU General Public License v3](LICENSE), like 
 <details>
 <summary>Expand to see all version notes</summary>
 
+### 1.0.14 (November 22, 2026)
+- Height map: a new map is no longer damaged on save when the previous map had more points per row; such a map was dropped on the next start as "not saved"
+- Height map: maps damaged this way are repaired on load, so they appear again
+- Deleted height maps, tools and drills no longer come back after a restart
+- PCB Wizard: the open project is kept when G-PCB is closed; on the next start the wizard offers to continue it. The work zero and Z0 are kept only if the machine reports the same position as before, otherwise they are set again (switch: *Keep the project after closing G-PCB*)
+- PCB Wizard: *What to make* at the top of the plan — isolation, drilling, large holes, outline — with the number of programs and the time; a new project starts with all of them
+- PCB Wizard: *Skip* a program on the Run step; skipped programs are shown apart from the finished ones
+
 ### 1.0.13 (November 22, 2026)
 - Test board 50 × 50 mm in samples/test-board-50x50 (also on g-pcb.com) to check the finest trace and clearance your machine can mill
 - Height map: no false "outside the probed area" warning for the rapid return to X0 Y0 at the end of a program; only cutting moves are checked

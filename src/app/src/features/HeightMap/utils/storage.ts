@@ -36,12 +36,28 @@ const serializeMap = (map: HeightMap) => ({
     z: map.z.map((row) => row.map((v) => (Number.isFinite(v) ? v : null))),
 });
 
+/**
+ * Up to 1.0.13 the map list was saved with a deep merge, which left the tail
+ * of longer rows (and extra rows) of the previous first map in a new map.
+ * The leading values are the real ones, so such a map is cut back to its grid.
+ */
+export const trimToGrid = (raw: any) => {
+    const grid = raw?.grid;
+    if (!grid || !Array.isArray(raw.z)) return raw;
+    const { xPoints, yPoints } = grid;
+    const fits =
+        raw.z.length >= yPoints &&
+        raw.z.slice(0, yPoints).every((row: unknown) => Array.isArray(row) && row.length >= xPoints);
+    if (!fits) return raw;
+    return { ...raw, z: raw.z.slice(0, yPoints).map((row: unknown[]) => row.slice(0, xPoints)) };
+};
+
 export const loadHeightMapState = (): HeightMapWidgetState => {
     const saved = config.get('', {}) as Partial<HeightMapWidgetState>;
     const maps: HeightMap[] = [];
     for (const raw of saved.maps || []) {
         try {
-            maps.push(parseHeightMap(raw));
+            maps.push(parseHeightMap(trimToGrid(raw)));
         } catch {
             // ignore broken entries
         }
@@ -55,8 +71,12 @@ export const loadHeightMapState = (): HeightMapWidgetState => {
     };
 };
 
+// replace, not set: set deep-merges arrays by index, so a new map at index 0
+// would keep the tail of the longer rows of the previous first map (and the
+// map is then dropped on load as not matching its grid), and a shorter list
+// could never remove a deleted map
 export const saveHeightMapState = (state: HeightMapWidgetState) => {
-    config.set('', {
+    config.replace('', {
         ...state,
         maps: state.maps.map(serializeMap),
     });

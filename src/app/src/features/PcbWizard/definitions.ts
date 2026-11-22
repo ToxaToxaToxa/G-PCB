@@ -105,6 +105,8 @@ export interface WizardSettings {
     dwell: number;
     applyHeightMap: boolean;
     probe: ProbeSettings;
+    /** Save the open project to disk, to continue it after the app is closed */
+    keepProject: boolean;
 }
 
 export type LayerOverrides = Record<string, LayerKind>;

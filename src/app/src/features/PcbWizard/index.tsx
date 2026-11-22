@@ -23,8 +23,20 @@ import { DEFAULT_ORDER, DEFAULT_WIZARD_SETTINGS } from './lib/defaults';
 import { layoutPanel, panelizeModel } from './lib/panel';
 import { PlannedOperation, planOperations, planWarnings, programFileName } from './lib/plan';
 import { bitKey, heightMapGrid, referencePoint } from './lib/machine';
-import { Program, buildProgram, keepResults } from './lib/programs';
-import { WizardSession, getSession, resetMachineState, resetSession, updateSession, useSession } from './lib/session';
+import { Program, buildProgram, hashText, keepResults } from './lib/programs';
+import {
+    WizardSession,
+    getSession,
+    isFinished,
+    resetMachineState,
+    resetSession,
+    setKeepProject,
+    setSessionStages,
+    updateSession,
+    useSession,
+} from './lib/session';
+import { StoredSession, keepRestoredResults, loadStoredSession, restoreStep } from './lib/storedSession';
+import RestoreCard from './components/RestoreCard';
 import Stepper, { StepInfo } from './components/Stepper';
 import ProjectStep from './steps/ProjectStep';
 import StockStep from './steps/StockStep';
@@ -58,7 +70,20 @@ export const loadWizardSettings = (): WizardSettings => {
 };
 
 /** Settings that change the programs; probing and the height map switch do not. */
-const programKey = (s: WizardSettings) => JSON.stringify({ ...s, probe: undefined, applyHeightMap: undefined });
+const programKey = (s: WizardSettings) =>
+    JSON.stringify({ ...s, probe: undefined, applyHeightMap: undefined, keepProject: undefined });
+
+const STAGES: StageKind[] = ['isolation', 'drill', 'holes', 'outline'];
+const stagesOf = (s: WizardSettings) =>
+    Object.fromEntries(STAGES.map((k) => [k, s[k].enabled])) as Record<StageKind, boolean>;
+const withStages = (s: WizardSettings, on: Record<StageKind, boolean>): WizardSettings => ({
+    ...s,
+    isolation: { ...s.isolation, enabled: on.isolation ?? true },
+    drill: { ...s.drill, enabled: on.drill ?? true },
+    holes: { ...s.holes, enabled: on.holes ?? true },
+    outline: { ...s.outline, enabled: on.outline ?? true },
+});
+const ALL_STAGES: Record<StageKind, boolean> = { isolation: true, drill: true, holes: true, outline: true };
 
 const STEPS = [
     { title: 'Project', hint: 'Gerber files and layers' },
@@ -71,6 +96,7 @@ const STEPS = [
     { title: 'Done', hint: 'Summary' },
 ];
 const PLAN_STEP = 3;
+const ZERO_STEP = 4;
 
 const downloadBlob = (name: string, blob: Blob) => {
     const link = document.createElement('a');
@@ -91,8 +117,24 @@ const PcbWizard = () => {
     const [selected, setSelected] = useState<string | null>(null);
 
     useEffect(() => {
-        config.set('', settings);
+        // replace: set deep-merges arrays, so removed tools or drills would come back
+        config.replace('', settings);
+        setSessionStages(stagesOf(settings));
+        setKeepProject(settings.keepProject);
     }, [settings]);
+
+    // the project that was open when the app was closed
+    const [offer, setOffer] = useState<StoredSession | null>(null);
+    useEffect(() => {
+        if (!settings.keepProject || getSession().inputs.length) return undefined;
+        let live = true;
+        loadStoredSession().then((stored) => {
+            if (live && !getSession().inputs.length) setOffer(stored);
+        });
+        return () => {
+            live = false;
+        };
+    }, []);
 
     const board = useMemo(() => (project ? buildBoardModel(project, settings.side) : null), [project, settings.side]);
     const layout = useMemo(
@@ -133,7 +175,15 @@ const PcbWizard = () => {
                 }
                 const prev = getSession();
                 const patch: Partial<WizardSession> = { ops: next, builtFrom: { project, settings: key } };
-                if (prev.ops.length) {
+                if (prev.restoredHashes) {
+                    // first programs after a restore: keep only what still matches the programs that ran
+                    patch.results = keepRestoredResults(next, prev.results, prev.restoredHashes, hashText);
+                    patch.restoredHashes = null;
+                    const map = findHeightMap(prev.heightMapId);
+                    if (map && JSON.stringify(map.grid) !== JSON.stringify(heightMapGrid(next, settings))) {
+                        patch.heightMapId = null;
+                    }
+                } else if (prev.ops.length) {
                     // the plan changed under a job in progress: forget what no longer holds
                     patch.results = keepResults(prev.ops, next, prev.results);
                     const sameArea = JSON.stringify(heightMapGrid(prev.ops, settings)) === JSON.stringify(heightMapGrid(next, settings));
@@ -163,7 +213,11 @@ const PcbWizard = () => {
         try {
             const read = await readInputFiles(files);
             resetMachineState();
+            setOffer(null);
+            // a new project starts with every stage; the choice is made in the plan
+            setSettings((prev) => withStages(prev, ALL_STAGES));
             updateSession({
+                restoredHashes: null,
                 projectName: files.length === 1 ? files[0].name.replace(/\.[^.]+$/, '') : 'pcb',
                 inputs: read,
                 overrides: {},
@@ -176,6 +230,43 @@ const PcbWizard = () => {
         } finally {
             setBusy(false);
         }
+    };
+
+    const onRestore = (stored: StoredSession, zeroKept: boolean) => {
+        setOffer(null);
+        setSettings((prev) => withStages(prev, stored.stages ?? ALL_STAGES));
+        updateSession({
+            step: restoreStep(stored.step, zeroKept, ZERO_STEP),
+            inputs: stored.inputs,
+            overrides: stored.overrides,
+            projectName: stored.projectName,
+            ops: [],
+            builtFrom: null,
+            xySet: zeroKept && stored.xySet,
+            reference: zeroKept ? stored.reference : null,
+            zeroBit: zeroKept ? stored.zeroBit : null,
+            heightMapId: zeroKept ? stored.heightMapId : null,
+            skipHeightMap: stored.skipHeightMap,
+            results: stored.results,
+            restoredHashes: stored.opHashes,
+            runningId: null,
+            loaded: null,
+        });
+        reparse(stored.inputs, stored.overrides);
+        const started = Object.values(stored.results).some(isFinished);
+        if (!zeroKept && (stored.xySet || stored.zeroBit)) {
+            toast.warning(
+                started
+                    ? 'The machine position was not kept: set X0 Y0 exactly at the same blank corner before the remaining programs.'
+                    : 'The machine position was not kept: set the work zero again.',
+                { duration: 12000 },
+            );
+        }
+    };
+
+    const onDiscard = () => {
+        setOffer(null);
+        resetSession();
     };
 
     const onLayer = (name: string, kind: LayerKind) => {
@@ -233,7 +324,7 @@ const PcbWizard = () => {
     const problems = [...(layout?.warnings ?? []), ...planWarnings(settings)];
     const warnings = [...problems, ...(panel?.warnings ?? []), ...mapWarnings];
     const planReady = ops.length > 0 && !stale;
-    const allDone = ops.length > 0 && ops.every((op) => session.results[op.id] === 'done');
+    const allDone = ops.length > 0 && ops.every((op) => isFinished(session.results[op.id]));
     const anyStopped = ops.some((op) => session.results[op.id] === 'stopped');
     const mapDone = !!heightMap || session.skipHeightMap;
 
@@ -258,6 +349,18 @@ const PcbWizard = () => {
         if (step === 0 || !board || !layout || !panel) {
             return (
                 <ProjectStep
+                    restore={
+                        offer && (
+                            <RestoreCard
+                                stored={offer}
+                                stepTitle={STEPS[Math.min(offer.step, STEPS.length - 1)].title}
+                                onContinue={(zeroKept) => onRestore(offer, zeroKept)}
+                                onDiscard={onDiscard}
+                            />
+                        )
+                    }
+                    keepProject={settings.keepProject}
+                    onKeepProject={(keepProject) => update({ keepProject })}
                     project={project}
                     board={board}
                     side={settings.side}

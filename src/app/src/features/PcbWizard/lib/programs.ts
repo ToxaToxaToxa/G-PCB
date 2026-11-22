@@ -5,7 +5,7 @@
 import { HeightMap } from 'app/features/HeightMap/definitions';
 import { applyHeightMap } from 'app/features/HeightMap/utils/applyHeightMap';
 
-import { ProgramResult } from './session';
+import type { ProgramResult } from './session';
 import { PlannedOperation } from './plan';
 
 export interface Program {
