@@ -51,6 +51,11 @@ header .wrap { display: flex; align-items: center; gap: 24px; height: 64px; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; text-decoration: none; }
 .brand img { width: 34px; height: 34px; border-radius: 8px; }
 nav { display: flex; gap: 22px; margin-left: auto; font-size: 15px; }
+nav a, .brand, .donate-link { white-space: nowrap; }
+@media (max-width: 1060px) {
+    nav { display: none; }
+    header .donate-link { margin-left: auto; }
+}
 nav a { text-decoration: none; color: var(--muted); }
 nav a:hover { color: var(--ink); }
 .donate-link {
@@ -162,6 +167,8 @@ section.alt .card { background: var(--bg); }
 .testboard li { margin: 4px 0; }
 .testboard .cta { margin-top: 18px; }
 .testboard .shot { max-width: 460px; justify-self: end; }
+.holder { grid-template-columns: 1.3fr 1fr; }
+.holder .shot { max-width: none; justify-self: stretch; }
 
 /* faq */
 details {
@@ -207,6 +214,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 18px; justify-content: space
         <nav>
             <a href="#how"><span class="en">How it works</span><span class="uk">Як це працює</span></a>
             <a href="#features"><span class="en">Features</span><span class="uk">Можливості</span></a>
+            <a href="#holder"><span class="en">Holder</span><span class="uk">Тримач</span></a>
             <a href="#needs"><span class="en">What you need</span><span class="uk">Що потрібно</span></a>
             <a href="#faq">FAQ</a>
             <a href="#support"><span class="en">Support</span><span class="uk">Підтримка</span></a>
@@ -246,7 +254,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 18px; justify-content: space
                 <span class="uk">Windows 10/11 · GPL-3.0 · побудовано на gSender — вільній програмі керування ЧПК від Sienci Labs</span>
             </p>
         </div>
-        <div class="hero-img"><img src="img/hero-3018.webp" alt="CNC 3018 with a copper-clad blank on the bed" width="820" height="683"></div>
+        <div class="hero-img"><img src="img/hero-3018.webp" alt="CNC 3018 with a copper-clad blank in the 3D-printed holder" width="820" height="697"></div>
     </div>
 </section>
 
@@ -372,6 +380,28 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 18px; justify-content: space
                 </div>
             </div>
             <div class="shot"><img src="img/test-board-50x50.webp" width="694" height="694" alt="Test board 50 x 50 mm, top copper"></div>
+        </div>
+    </div>
+</section>
+
+<section id="holder">
+    <div class="wrap">
+        <div class="step testboard holder">
+            <div class="shot"><img src="img/pcb-holder.webp" width="1200" height="594" alt="3D-printed PCB blank holder on a CNC 3018 bed" loading="lazy"></div>
+            <div>
+                <h2><span class="en">Blank holder for the 3018</span><span class="uk">Тримач заготовки для 3018</span></h2>
+                <p><span class="en">A 3D-printed holder for copper-clad blanks. The blank always goes into the same corner of a fixed stop, so X0 Y0 is found again even after the machine was switched off. Two sliding fences hold a blank of any size.</span><span class="uk">Друкований тримач для фольгованих заготовок. Заготовку завжди кладуть у той самий кут нерухомого упора, тож X0 Y0 знаходиться знову навіть після вимкнення станка. Два ковзні упори тримають заготовку будь-якого розміру.</span></p>
+                <ul>
+                    <li><span class="en">Corner stop with a key in the T-slot, X and Y fences — PETG, no supports</span><span class="uk">Кутовий упор із ключем у Т-пазі, упори X і Y — PETG, без підтримок</span></li>
+                    <li><span class="en">Seven M5 ISO 7380 screws and T-nuts, heads recessed</span><span class="uk">Сім гвинтів M5 ISO 7380 і Т-гайки, головки утоплені</span></li>
+                    <li><span class="en">Lips only 0.85 mm above the copper, below the travel height</span><span class="uk">Виступи лише на 0,85 мм вище міді — нижче за висоту холостих переміщень</span></li>
+                    <li><span class="en">A spacer of old copper-clad under the blank protects the bed from drills and the outline cut</span><span class="uk">Підкладка зі старого текстоліту під заготовкою захищає стіл від свердел і контурного різу</span></li>
+                </ul>
+                <p><span class="en">The T-slot sizes come from a model of the machine (pitch 30 mm, opening 6 mm): check them on your bed before printing.</span><span class="uk">Розміри Т-пазів узято з моделі станка (крок 30 мм, щілина 6 мм): звірте їх на своєму столі перед друком.</span></p>
+                <div class="cta">
+                    <a class="btn btn-primary" data-umami-event="holder" href="files/gpcb-pcb-holder.zip" download><span class="en">Download STL + STEP (zip)</span><span class="uk">Завантажити STL і STEP (zip)</span></a>
+                </div>
+            </div>
         </div>
     </div>
 </section>
