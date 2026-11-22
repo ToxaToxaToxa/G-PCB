@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.0.12",
+    "date": "November 22, 2026",
+    "notes": [
+      "Height map: the map is kept when the controller does not report the last touch; once every point is touched and the machine is idle, probing finishes",
+      "Height map: after Stop or an error the measured points stay on screen, in the wizard too",
+      "Height map: probing is logged (start, ignored reports, why it finished) and a failed run is reported, so problems can be found"
+    ]
+  },
+  {
     "version": "1.0.11",
     "date": "November 22, 2026",
     "notes": [
@@ -16,13 +25,6 @@
       "Work zero: close-ups of the bit over the blank corner (X0 Y0) and of the probe clips (Z0), with the buttons next to them",
       "Height map: the probe points lie on the copper and take colour as they are probed",
       "Run: the current program's toolpaths are drawn on the blank, with the program list beside it"
-    ]
-  },
-  {
-    "version": "1.0.9",
-    "date": "November 22, 2026",
-    "notes": [
-      "Rendered pictures of a CNC 3018 on the Blank & array, Work zero, Height map and Run steps show what to do at the machine: the clamped blank, X0 Y0 at the corner, the probe clips for Z0, the height map points and the bit change; a click opens a picture full size"
     ]
   }
 ]

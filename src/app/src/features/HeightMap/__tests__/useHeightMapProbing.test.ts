@@ -27,12 +27,17 @@ const controllerState = {
     state: { status: { activeState: 'Run' } },
 };
 
+const mockSentry = { captureMessage: jest.fn() };
+jest.mock('@sentry/react', () => ({
+    captureMessage: (...args: unknown[]) => mockSentry.captureMessage(...args),
+}));
+
 jest.mock('app/store/redux', () => ({
     __esModule: true,
     default: { getState: () => ({ controller: controllerState }) },
 }));
 
-import { useHeightMapProbing } from '../useHeightMapProbing';
+import { SETTLE_MS, useHeightMapProbing } from '../useHeightMapProbing';
 
 const grid = { xStart: 0, yStart: 0, width: 10, length: 10, xPoints: 2, yPoints: 2 };
 const probe = { clearanceZ: 2, probeMinZ: -2, probeFeed: 100, probeFeedSlow: 20, retract: 0.5 };
@@ -50,6 +55,7 @@ beforeEach(() => {
     commands.length = 0;
     controllerState.settings.settings.$13 = '0';
     controllerState.state.status.activeState = 'Run';
+    mockSentry.captureMessage.mockClear();
 });
 
 describe('useHeightMapProbing', () => {
@@ -134,6 +140,55 @@ describe('useHeightMapProbing', () => {
             act(() => jest.advanceTimersByTime(200));
             expect(result.current.status).toBe('failed');
             expect(result.current.failure).toEqual({ kind: 'timeout', seconds: 46 });
+            expect(mockSentry.captureMessage).toHaveBeenCalledWith(
+                'Height map probing failed: timeout',
+                expect.objectContaining({ level: 'warning' }),
+            );
+        });
+
+        // all four points touched, but the slow touch of the last one never reported
+        const allButLastSlow = () => {
+            emit(prb(0, 0, 0));
+            emit(prb(0, 0, 0));
+            emit(prb(10, 0, 0.1));
+            emit(prb(10, 0, 0.1));
+            emit(prb(10, 10, 0.3));
+            emit(prb(10, 10, 0.3));
+            emit(prb(0, 10, 0.25));
+        };
+
+        it('keeps the map when the last report is missing and the machine is idle', () => {
+            const onComplete = jest.fn();
+            const { result } = renderHook(() => useHeightMapProbing(onComplete));
+            act(() => result.current.start(grid, probe));
+            allButLastSlow();
+            act(() => jest.advanceTimersByTime(5000));
+            // still moving: the slow touch may yet come
+            expect(result.current.status).toBe('running');
+            controllerState.state.status.activeState = 'Idle';
+            act(() => jest.advanceTimersByTime(SETTLE_MS + 500));
+            expect(result.current.status).toBe('done');
+            expect(onComplete).toHaveBeenCalledTimes(1);
+            expect(onComplete.mock.calls[0][0].z[1][0]).toBeCloseTo(0.25);
+        });
+
+        it('keeps the map at the watchdog when every point was touched', () => {
+            const onComplete = jest.fn();
+            const { result } = renderHook(() => useHeightMapProbing(onComplete));
+            act(() => result.current.start(grid, probe));
+            allButLastSlow();
+            act(() => jest.advanceTimersByTime(timeout + 100));
+            expect(result.current.status).toBe('done');
+            expect(onComplete).toHaveBeenCalledTimes(1);
+        });
+
+        it('keeps the measured points after a failure', () => {
+            const { result } = renderHook(() => useHeightMapProbing(jest.fn()));
+            act(() => result.current.start(grid, probe));
+            emit(prb(0, 0, 0));
+            emit('ALARM:1');
+            expect(result.current.status).toBe('failed');
+            expect(result.current.liveZ?.[0][0]).toBeCloseTo(0);
         });
 
         it('restarts the wait on every probe report', () => {

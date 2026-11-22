@@ -137,8 +137,10 @@ const HeightMapTool = () => {
     const setupErrors = [...gridErrors, ...probeErrors];
 
     // Grid shown in the preview: live probing, the selected map, or the setup
-    const previewGrid = isProbing || !activeMap ? state.grid : activeMap.grid;
-    const previewZ = isProbing || (!activeMap && liveZ) ? liveZ : activeMap?.z ?? null;
+    // after a stop or an error the measured points stay on screen
+    const showLive = isProbing || ((status === 'failed' || status === 'stopped' || !activeMap) && !!liveZ);
+    const previewGrid = showLive || !activeMap ? state.grid : activeMap.grid;
+    const previewZ = showLive ? liveZ : activeMap?.z ?? null;
 
     const updateGrid = (key: keyof HeightMapWidgetState['grid'], value: number) =>
         setState((prev) => ({ ...prev, grid: { ...prev.grid, [key]: value } }));

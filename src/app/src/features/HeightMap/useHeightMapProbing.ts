@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import * as Sentry from '@sentry/react';
 
 import controller from 'app/lib/controller';
 import reduxStore from 'app/store/redux';
@@ -23,6 +24,13 @@ export type ProbingFailure =
     | { kind: 'error'; code: string }
     | { kind: 'no-contact' }
     | { kind: 'timeout'; seconds: number };
+
+/** How long the controller must stay Idle before a map that lacks a final report is accepted. */
+export const SETTLE_MS = 2000;
+
+// Probing log: in the console and as Sentry breadcrumbs, so a failed run
+// arrives with its history.
+const trace = (text: string) => console.info(`[height map] ${text}`);
 
 interface Session {
     grid: HeightMapGridConfig;
@@ -56,6 +64,7 @@ export const useHeightMapProbing = (
     const session = useRef<Session | null>(null);
     const listener = useRef<((line: string) => void) | null>(null);
     const watchdog = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const settle = useRef<ReturnType<typeof setInterval> | null>(null);
     const timeoutMs = useRef(0);
     const onCompleteRef = useRef(onComplete);
     onCompleteRef.current = onComplete;
@@ -64,6 +73,10 @@ export const useHeightMapProbing = (
         if (watchdog.current) {
             clearTimeout(watchdog.current);
             watchdog.current = null;
+        }
+        if (settle.current) {
+            clearInterval(settle.current);
+            settle.current = null;
         }
         if (listener.current) {
             controller.removeListener('serialport:read', listener.current);
@@ -75,14 +88,73 @@ export const useHeightMapProbing = (
 
     const finish = useCallback(
         (nextStatus: ProbingStatus, text: string, why: ProbingFailure | null = null) => {
+            const current = session.current;
             detach();
             session.current = null;
+            const measured = current ? current.hits.filter((h) => h > 0).length : 0;
+            const total = current ? current.points.length : 0;
+            trace(`${nextStatus}: ${text} (${measured}/${total} points measured)`);
+            if (nextStatus === 'failed') {
+                Sentry.captureMessage(`Height map probing failed: ${why?.kind ?? 'unknown'}`, {
+                    level: 'warning',
+                    extra: { text, measured, total, failure: why },
+                });
+            }
             setStatus(nextStatus);
             setMessage(text);
             setFailure(why);
         },
         [detach],
     );
+
+    const complete = useCallback(
+        (current: Session, text: string) => {
+            const now = new Date();
+            const map: HeightMap = {
+                id: `hm-${now.getTime()}`,
+                name: `Height map ${now.toLocaleString()}`,
+                createdAt: now.toISOString(),
+                grid: { ...current.grid },
+                z: current.z.map((row) => [...row]),
+                wcs: current.wcs,
+            };
+            finish('done', text);
+            onCompleteRef.current(map);
+        },
+        [finish],
+    );
+
+    /** Every point has at least one touch: the map is usable. */
+    const allMeasured = (current: Session) => current.hits.every((h) => h > 0);
+
+    // Every point was touched but a final report is missing (a controller
+    // that merged or dropped a line): once the machine has stayed Idle, the
+    // program is over, so keep the map instead of waiting for the watchdog.
+    const watchSettle = useCallback(() => {
+        if (settle.current) {
+            return;
+        }
+        let idleSince = 0;
+        settle.current = setInterval(() => {
+            const current = session.current;
+            if (!current) {
+                return;
+            }
+            const state = String(
+                reduxStore.getState().controller?.state?.status?.activeState ?? '',
+            );
+            if (state !== 'Idle') {
+                idleSince = 0;
+                return;
+            }
+            idleSince ||= Date.now();
+            if (Date.now() - idleSince >= SETTLE_MS) {
+                const short = current.hits.filter((h) => h < current.touches).length;
+                trace(`program ended; ${short} point(s) kept their first touch`);
+                complete(current, 'Probing finished');
+            }
+        }, 250);
+    }, [complete]);
 
     // Neither a report nor an alarm for longer than any touch can take: the
     // controller or its USB link stopped answering. A feed hold only pauses.
@@ -99,6 +171,12 @@ export const useHeightMapProbing = (
                 arm();
                 return;
             }
+            const current = session.current;
+            if (current && allMeasured(current)) {
+                trace('no further reports, every point measured');
+                complete(current, 'Probing finished');
+                return;
+            }
             const seconds = Math.round(timeoutMs.current / 1000);
             finish(
                 'failed',
@@ -106,7 +184,7 @@ export const useHeightMapProbing = (
                 { kind: 'timeout', seconds },
             );
         }, timeoutMs.current);
-    }, [finish]);
+    }, [finish, complete]);
 
     const handleLine = useCallback(
         (line: string) => {
@@ -150,6 +228,7 @@ export const useHeightMapProbing = (
                 (p) => Math.hypot(p.x - workX, p.y - workY) < 0.05,
             );
             if (index === -1) {
+                trace(`report outside the grid ignored: ${line.trim()} (work X${workX.toFixed(3)} Y${workY.toFixed(3)})`);
                 return;
             }
             const point = current.points[index];
@@ -164,20 +243,12 @@ export const useHeightMapProbing = (
             setProgress({ done, total: current.points.length });
 
             if (done === current.points.length) {
-                const now = new Date();
-                const map: HeightMap = {
-                    id: `hm-${now.getTime()}`,
-                    name: `Height map ${now.toLocaleString()}`,
-                    createdAt: now.toISOString(),
-                    grid: { ...current.grid },
-                    z: current.z.map((row) => [...row]),
-                    wcs: current.wcs,
-                };
-                finish('done', 'Probing finished');
-                onCompleteRef.current(map);
+                complete(current, 'Probing finished');
+            } else if (allMeasured(current)) {
+                watchSettle();
             }
         },
-        [finish, arm],
+        [finish, arm, complete, watchSettle],
     );
 
     const start = useCallback(
@@ -213,6 +284,10 @@ export const useHeightMapProbing = (
 
             listener.current = handleLine;
             controller.addListener('serialport:read', handleLine);
+            trace(
+                `start: ${points.length} points, ${touchesPerPoint(probe)} touch(es) each, ` +
+                    `WCO ${wco.x.toFixed(3)},${wco.y.toFixed(3)},${wco.z.toFixed(3)}, ${inches ? 'inch' : 'mm'} reports`,
+            );
             controller.command('gcode:safe', commands, 'G21');
             timeoutMs.current = probeReportTimeoutMs(probe);
             arm();

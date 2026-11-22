@@ -111,6 +111,11 @@ G-PCB is free software under the [GNU General Public License v3](LICENSE), like 
 <details>
 <summary>Expand to see all version notes</summary>
 
+### 1.0.12 (November 22, 2026)
+- Height map: the map is kept when the controller does not report the last touch; once every point is touched and the machine is idle, probing finishes
+- Height map: after Stop or an error the measured points stay on screen, in the wizard too
+- Height map: probing is logged (start, ignored reports, why it finished) and a failed run is reported, so problems can be found
+
 ### 1.0.11 (November 22, 2026)
 - WhatsApp support and Donate buttons in Stats → About
 - Links to GitHub and other sites open in your browser again instead of a bare G-PCB window

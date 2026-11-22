@@ -109,8 +109,11 @@ const HeightMapStep = ({ grid, stock, panel, projectName, probe, onProbe }: Prop
     const running = probing.status === 'running';
     useProbingLock(running);
 
-    const shownGrid = running || !saved ? grid : saved.grid;
-    const shownZ = running ? probing.liveZ : (saved?.z ?? null);
+    // after a stop or an error the measured points stay on the blank
+    const unfinished = probing.status === 'failed' || probing.status === 'stopped';
+    const showLive = running || (unfinished && !!probing.liveZ);
+    const shownGrid = showLive || !saved ? grid : saved.grid;
+    const shownZ = showLive ? probing.liveZ : (saved?.z ?? null);
     const stats = saved ? getMapStats(saved) : null;
     const canProbe = idle && !running && !!grid && !!session.zeroBit;
 
