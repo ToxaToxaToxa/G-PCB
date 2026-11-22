@@ -8,6 +8,7 @@ import { SET_XY_ZERO } from '../lib/machine';
 import { updateSession, useProbingLock, useSession } from '../lib/session';
 import MachineStatus, { useMachine } from '../components/MachineStatus';
 import { StepColumns } from '../components/Layout';
+import Illustration, { PICTURES } from '../components/Illustration';
 import { useZeroProbe } from '../useZeroProbe';
 
 interface Props {
@@ -71,6 +72,7 @@ const ZeroStep = ({ probe, reference, firstBit, onProbe }: Props) => {
                         )}
                         {!session.xySet && <p className="text-xs text-gray-500">Set X0 Y0 first.</p>}
                     </Card>
+                    <Illustration pictures={[PICTURES.zeroXY, PICTURES.zeroZ]} />
                 </>
             }
             right={

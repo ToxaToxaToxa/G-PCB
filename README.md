@@ -111,6 +111,9 @@ G-PCB is free software under the [GNU General Public License v3](LICENSE), like 
 <details>
 <summary>Expand to see all version notes</summary>
 
+### 1.0.9 (November 22, 2026)
+- Rendered pictures of a CNC 3018 on the Blank & array, Work zero, Height map and Run steps show what to do at the machine: the clamped blank, X0 Y0 at the corner, the probe clips for Z0, the height map points and the bit change; a click opens a picture full size
+
 ### 1.0.8 (November 22, 2026)
 - Check for updates button in Stats → About: answers "up to date" too, and opens the update window at once when a new version is out
 - The About page describes G-PCB, with credit to gSender and its team

@@ -12,6 +12,7 @@ import { bitKey } from '../lib/machine';
 import { PlannedOperation, programFileName } from '../lib/plan';
 import { Program } from '../lib/programs';
 import { Warnings } from '../components/Layout';
+import Illustration, { PICTURES } from '../components/Illustration';
 import { updateSession, useSession } from '../lib/session';
 import MachineStatus, { useMachine } from '../components/MachineStatus';
 import { useZeroProbe } from '../useZeroProbe';
@@ -180,7 +181,9 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
                 </Card>
             </div>
 
-            <Card className="min-h-0 overflow-y-auto">
+            {/* the list takes what it needs; the bit change picture fills the rest */}
+            <div className="flex flex-col gap-2 min-h-0">
+                <Card className="min-h-0 shrink overflow-y-auto">
                 <p className="text-sm font-semibold">Programs</p>
                 {ops.map((o, i) => {
                     const result = session.results[o.id];
@@ -214,7 +217,9 @@ const RunStep = ({ ops, programs, updating, settings, projectName, reference, he
                         </button>
                     );
                 })}
-            </Card>
+                </Card>
+                <Illustration pictures={[PICTURES.run]} />
+            </div>
         </div>
     );
 };

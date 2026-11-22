@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.9",
+    "date": "November 22, 2026",
+    "notes": [
+      "Rendered pictures of a CNC 3018 on the Blank & array, Work zero, Height map and Run steps show what to do at the machine: the clamped blank, X0 Y0 at the corner, the probe clips for Z0, the height map points and the bit change; a click opens a picture full size"
+    ]
+  },
+  {
     "version": "1.0.8",
     "date": "November 22, 2026",
     "notes": [
@@ -14,13 +21,6 @@
       "Height map probing stops with a clear message when the controller stops answering, instead of waiting forever",
       "When probing stops on an alarm, the wizard explains the cause (no contact, probe already closed, limits) and offers Unlock or Reset controller",
       "The wizard stays on the Work zero or Height map step while probing, so the probe results are not lost"
-    ]
-  },
-  {
-    "version": "1.0.6",
-    "date": "November 22, 2026",
-    "notes": [
-      "Fixed a crash when closing G-PCB right after the machine was sent commands, for example during height map probing: an aborted write on the closing port no longer closes G-PCB with an error"
     ]
   }
 ]

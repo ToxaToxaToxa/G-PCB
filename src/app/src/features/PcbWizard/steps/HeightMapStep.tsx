@@ -29,6 +29,7 @@ import { heightMapProbeConfig } from '../lib/machine';
 import { updateSession, useProbingLock, useSession } from '../lib/session';
 import MachineStatus, { useMachine } from '../components/MachineStatus';
 import { StepColumns } from '../components/Layout';
+import Illustration, { PICTURES } from '../components/Illustration';
 
 interface Props {
     grid: HeightMapGridConfig | null;
@@ -220,6 +221,7 @@ const HeightMapStep = ({ grid, projectName, probe, onProbe }: Props) => {
                             }
                         />
                     </Card>
+                    <Illustration pictures={[PICTURES.heightMap]} />
                 </>
             }
             right={

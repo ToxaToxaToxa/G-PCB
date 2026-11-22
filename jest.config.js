@@ -13,7 +13,7 @@ module.exports = {
 ],
   moduleNameMapper: {
   '\\.(css|less|scss|sass|styl)$': '<rootDir>/src/app/src/__mocks__/styleMock.js',
-  '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/src/app/src/__mocks__/fileMock.js',
+  '\\.(jpg|jpeg|png|gif|svg|webp)$': '<rootDir>/src/app/src/__mocks__/fileMock.js',
   '^app/(.*)$': '<rootDir>/src/app/src/$1',
   // Mirrors the 'server/...' -> 'src/server/...' resolution in esbuild.config.js
   '^server/(.*)$': '<rootDir>/src/server/$1',

@@ -4,6 +4,7 @@ import { Card, Check, Field, FieldGrid, Select } from '../../PcbMilling/componen
 import { Rotation, StockSettings } from '../definitions';
 import { PanelLayout } from '../lib/panel';
 import { StepColumns, Warnings } from '../components/Layout';
+import Illustration, { PICTURES } from '../components/Illustration';
 
 interface Props {
     stock: StockSettings;
@@ -61,6 +62,7 @@ const StockStep = ({ stock, board, panel, layout, onChange }: Props) => {
                             Board {layout.boardWidth.toFixed(2)} × {layout.boardHeight.toFixed(2)} mm on the blank · {used.toFixed(0)}% of the blank used
                         </p>
                     </Card>
+                    <Illustration pictures={[PICTURES.blank]} />
                 </>
             }
             right={
